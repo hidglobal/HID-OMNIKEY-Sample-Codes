@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26403.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HidGlobal.OK.SampleCodes", "HidGlobal.OK.SampleCodes\HidGlobal.OK.SampleCodes.csproj", "{12209FE6-96B1-4700-AC36-DE3AFFAA5F1C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{12773016-4E38-4E9C-B0A2-A4FF295B3993} = {12773016-4E38-4E9C-B0A2-A4FF295B3993}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HidGlobal.OK.Readers", "HidGlobal.OK.Readers\HidGlobal.OK.Readers.csproj", "{12773016-4E38-4E9C-B0A2-A4FF295B3993}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{12209FE6-96B1-4700-AC36-DE3AFFAA5F1C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12209FE6-96B1-4700-AC36-DE3AFFAA5F1C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12209FE6-96B1-4700-AC36-DE3AFFAA5F1C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12209FE6-96B1-4700-AC36-DE3AFFAA5F1C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12773016-4E38-4E9C-B0A2-A4FF295B3993}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12773016-4E38-4E9C-B0A2-A4FF295B3993}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12773016-4E38-4E9C-B0A2-A4FF295B3993}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12773016-4E38-4E9C-B0A2-A4FF295B3993}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
