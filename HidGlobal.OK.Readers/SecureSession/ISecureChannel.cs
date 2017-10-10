@@ -19,9 +19,43 @@
            (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
            THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *****************************************************************************************/
+using System;
 
-namespace HidGlobal.OK.Readers.Components
+namespace HidGlobal.OK.Readers.SecureSession
 {
-    public enum BookNumber : byte { Book0 = 0x00, Book1 = 0x01 };
-    public enum PageNumber : byte { Page0 = 0x00, Page1 = 0x01, Page2 = 0x02, Page3 = 0x03, Page4 = 0x04, Page5 = 0x05, Page6 = 0x06, Page7 = 0x07 };
+    public interface ISecureChannel : IDisposable
+    {
+        /// <summary>
+        /// True if secure channel is established.
+        /// </summary>
+        bool IsSessionActive { get; }
+        /// <summary>
+        /// Establish secure channel with given key and access wrights defined by key slot.
+        /// </summary>
+        /// <param name="sessionKey"></param>
+        /// <param name="sessionKeySlotNumber"></param>
+        void Establish(string sessionKey, byte sessionKeySlotNumber);
+        /// <summary>
+        /// Establish secure channel with given key and access wrights defined by key slot.
+        /// </summary>
+        /// <param name="sessionKey"></param>
+        /// <param name="sessionKeySlotNumber"></param>
+        void Establish(byte[] sessionKey, byte sessionKeySlotNumber);
+        /// <summary>
+        /// Closes current channel.
+        /// </summary>
+        void Terminate();
+        /// <summary>
+        /// Encrypts and send given command. Returns decrypted response.
+        /// </summary>
+        /// <param name="command"></param>
+        /// <returns></returns>
+        string SendCommand(string command);
+        /// <summary>
+        /// Encrypts and send given command. Returns decrypted response.
+        /// </summary>
+        /// <param name="command"></param>
+        /// <returns></returns>
+        byte[] SendCommand(byte[] command);
+    }
 }

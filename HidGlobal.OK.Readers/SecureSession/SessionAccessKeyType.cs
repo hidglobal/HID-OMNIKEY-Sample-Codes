@@ -34,7 +34,7 @@ namespace HidGlobal.OK.Readers.SecureSession
         /// <summary>
         /// Can load all keys and read/write iCLASS.
         /// </summary>
-         UserAdminMacKey = 69,
+        UserAdminMacKey = 69,
         
         /// <summary>
         /// Can read/write iCLASS.

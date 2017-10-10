@@ -20,11 +20,6 @@
            THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *****************************************************************************************/
 using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using HidGlobal.OK.Readers;
 using HidGlobal.OK.Readers.AViatoR.Components;
 using HidGlobal.OK.Readers.Components;
@@ -46,9 +41,6 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
         /// <returns></returns>
         private static IReader Connect(string readerName)
         {
-            if (!Program.WinscardContext.IsValid())
-                Program.WinscardContext.Establish(Scope.System);
-
             var reader = new Reader(Program.WinscardContext.Handle, readerName);
 
             ReaderState readerState = Program.WinscardContext.GetReaderState(reader.PcscReaderName);

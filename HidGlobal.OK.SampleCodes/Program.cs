@@ -37,6 +37,9 @@ namespace HidGlobal.OK.SampleCodes
         private static readonly List<string> _supportedReaders = new List<string>(new[]
         {
             "HID Global OMNIKEY 5022 Smart Card Reader",
+            "HID Global OMNIKEY 5023 Smart Card Reader",
+            "HID Global OMNIKEY 5122 Smartcard Reader",
+            "HID Global OMNIKEY 5122CL Smartcard Reader",
             "HID Global OMNIKEY 5422 Smartcard Reader",
             "HID Global OMNIKEY 5422CL Smartcard Reader",
         });
@@ -45,12 +48,14 @@ namespace HidGlobal.OK.SampleCodes
         {
             WinscardContext.Establish(Readers.Components.Scope.System);
 
-            // Create instance of main menu with reader selection
-            CreateMenu();
-            UpdateMenu();
-            _mainMenu.RunMenu();
-
-            WinscardContext.Dispose();
+            using (WinscardContext)
+            {
+                // Create instance of main menu with reader selection
+                CreateMenu();
+                UpdateMenu();
+                _mainMenu.RunMenu();
+            }
+            
             return 0;
         }
 
@@ -61,14 +66,17 @@ namespace HidGlobal.OK.SampleCodes
         {
             _activeReaders.Clear();
 
-            // check context validity
-            if (!WinscardContext.IsValid())
-                WinscardContext.Establish(Readers.Components.Scope.System);
-
             var readerNames = WinscardContext.ListReaders();
 
             if (readerNames != null)
+            {
                 _activeReaders = readerNames.Where(readerName => _supportedReaders.Any(readerName.Contains)).ToList();
+            }
+            else
+            {
+                ConsoleWriter.Instance.PrintMessage("None of supported readers has been found..");
+                ConsoleWriter.Instance.WaitKeyPress();
+            }
         }
 
         private static void CreateMenu()
@@ -96,6 +104,16 @@ namespace HidGlobal.OK.SampleCodes
             if (readerName.Contains("5022"))
             {
                 var sample = new AViatoR.Ok5022Samples(readerName);
+                sample.Menu.RunMenu();
+            }
+            else if (readerName.Contains("5023"))
+            {
+                var sample = new AViatoR.Ok5023Samples(readerName);
+                sample.Menu.RunMenu();
+            }
+            else if (readerName.Contains("5122"))
+            {
+                var sample = new AViatoR.Ok5122Samples(readerName);
                 sample.Menu.RunMenu();
             }
             else if(readerName.Contains("5422"))

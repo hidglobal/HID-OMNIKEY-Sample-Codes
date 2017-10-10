@@ -51,9 +51,6 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
         }
         private static IReader Connect(string readerName)
         {
-            if (!Program.WinscardContext.IsValid())
-                Program.WinscardContext.Establish(Scope.System);
-
             var reader = new Reader(Program.WinscardContext.Handle, readerName);
 
             var readerState = Program.WinscardContext.GetReaderState(reader.PcscReaderName);

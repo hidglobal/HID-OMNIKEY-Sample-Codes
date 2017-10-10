@@ -22,94 +22,121 @@
 using System;
 using HidGlobal.OK.Readers;
 using HidGlobal.OK.Readers.Components;
+using HidGlobal.OK.SampleCodes.Utilities;
 
 namespace HidGlobal.OK.SampleCodes.AViatoR
 {
-    static class ReaderEepromSample
+    public class ReaderEepromSample
     {
-        private static void PrintData(string title, string command, string response)
+        private static void PrintCommand(string name, string input, string output)
         {
-            Console.WriteLine("-----------------------------------");
-            Console.WriteLine($"{title}:\n<-- {command}\n--> {response}");
+            ConsoleWriter.Instance.PrintSplitter();
+            ConsoleWriter.Instance.PrintCommand(name, input, output);
         }
-        private static IReader Connect(string readerName)
+        public class WriteEeprom
         {
-            if (!Program.WinscardContext.IsValid())
-                Program.WinscardContext.Establish(Scope.System);
+            private void WriteEepromCommand(IReader reader, string comment, ushort offset, string dataToWrite)
+            {
+                var eepromCommands = new Readers.AViatoR.Components.ReaderEeprom();
 
-            var reader = new Reader(Program.WinscardContext.Handle, readerName);
+                string input = eepromCommands.WriteCommand(offset, dataToWrite);
+                string output = ReaderHelper.SendCommand(reader, input);
 
-            var readerState = Program.WinscardContext.GetReaderState(reader.PcscReaderName);
-            if (readerState.AtrLength > 0)
-                reader.Connect(ReaderSharingMode.Shared, Protocol.Any);
-            else
-                reader.ConnectDirect();
+                PrintCommand(comment, input, output);
+            }
+            void ExecuteExample(IReader reader)
+            {
+                WriteEepromCommand(reader, "Write 1 byte of FF with offset address 0x0001", 0x0001, "FF");
+                WriteEepromCommand(reader, "Write 16 bytes of FF with offset address 0x0001", 0x0001, "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+                WriteEepromCommand(reader, "Write 128 bytes of FF with offset address 0x0001", 0x0001,
+                    "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF" + "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF" +
+                    "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF" + "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF" +
+                    "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF" + "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF" +
+                    "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF" + "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+            }
+            public void Run(string readerName)
+            {
+                using (var reader = new Reader(Program.WinscardContext.Handle, readerName))
+                {
+                    try
+                    {
+                        ConsoleWriter.Instance.PrintSplitter();
+                        ConsoleWriter.Instance.PrintTask($"Connecting to {reader.PcscReaderName}");
 
-            return reader;
+                        ReaderHelper.ConnectToReader(reader);
+
+                        ConsoleWriter.Instance.PrintMessage($"Connected\nConnection Mode: {reader.ConnectionMode}");
+
+                        ExecuteExample(reader);
+
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                    catch (Exception e)
+                    {
+                        ConsoleWriter.Instance.PrintError(e.Message);
+                    }
+                    finally
+                    {
+                        if (reader.IsConnected)
+                        {
+                            reader.Disconnect(CardDisposition.Unpower);
+                            ConsoleWriter.Instance.PrintMessage("Reader connection closed");
+                        }
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                }
+            }
         }
-        public static void WriteEeprom(string readerName)
+
+        public class ReadEeprom
         {
-            var eeprom = new Readers.AViatoR.Components.ReaderEeprom();
+            private void ReadEepromCommand(IReader reader, string comment, ushort offset, byte dataLength)
+            {
+                var eepromCommands = new Readers.AViatoR.Components.ReaderEeprom();
 
-            IReader reader = Connect(readerName);
+                string input = eepromCommands.ReadCommand(offset, dataLength);
+                string output = ReaderHelper.SendCommand(reader, input);
 
-            if (!reader.IsConnected)
-                return;
+                PrintCommand(comment, input, output);
+            }
+            private void ExecuteExample(IReader reader)
+            {
+                ReadEepromCommand(reader, "Read 1 byte with offset address 0x0000", 0x0000, 0x01);
+                ReadEepromCommand(reader, "Read 16 bytes with offset address 0x00F0", 0x00F0, 0x10);
+                ReadEepromCommand(reader, "Read 128 bytes with offset address 0x0100", 0x0100, 0x80);
+            }
+            public void Run(string readerName)
+            {
+                using (var reader = new Reader(Program.WinscardContext.Handle, readerName))
+                {
+                    try
+                    {
+                        ConsoleWriter.Instance.PrintSplitter();
+                        ConsoleWriter.Instance.PrintTask($"Connecting to {reader.PcscReaderName}");
 
-            string command;
-            string response;
+                        ReaderHelper.ConnectToReader(reader);
 
+                        ConsoleWriter.Instance.PrintMessage($"Connected\nConnection Mode: {reader.ConnectionMode}");
 
-            // write 1 byte of FF
-            command = eeprom.WriteCommand(0x0001, "FF");
-            response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
-            PrintData("Write 1 byte of FF with offset address 0x0001", command, response);
+                        ExecuteExample(reader);
 
-            // write 16 bytes of FF starting from address 0x0001
-            command = eeprom.WriteCommand(0x0001, "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
-            response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
-            PrintData("Write 16 bytes of FF with offset address 0x0001", command, response);
-
-            // write 128 bytes of FF starting from address 0x0100
-            string data = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF" + "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF" +
-                          "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF" + "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF" +
-                          "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF" + "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF" +
-                          "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF" + "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
-            command = eeprom.WriteCommand(0x0001, data);
-            response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
-            PrintData("Write 128 bytes of FF with offset address 0x0001", command, response);
-
-            reader.Disconnect(CardDisposition.Unpower);
-        }
-        public static void ReadEeprom(string readerName)
-        {
-            var eeprom = new Readers.AViatoR.Components.ReaderEeprom();
-
-            IReader reader = Connect(readerName);
-
-            if (!reader.IsConnected)
-                return;
-
-            string command;
-            string response;
-
-
-            // Read 1 byte from eeprom
-            command = eeprom.ReadCommand(0x0000, 0x01);
-            response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
-            PrintData("Read 1 byte with offset address 0x0000", command, response);
-
-            // Read 16 bytes starting from address 0x00F0
-            command = eeprom.ReadCommand(0x00F0, 0x10);
-            response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
-            PrintData("Read 16 bytes with offset address 0x00F0", command, response);
-
-            // Read 128 bytes starting from address 0x0100
-            command = eeprom.ReadCommand(0x0100, 0x80);
-            response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
-            PrintData("Read 128 bytes with offset address 0x0100", command, response);
-
-            reader.Disconnect(CardDisposition.Unpower);
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                    catch (Exception e)
+                    {
+                        ConsoleWriter.Instance.PrintError(e.Message);
+                    }
+                    finally
+                    {
+                        if (reader.IsConnected)
+                        {
+                            reader.Disconnect(CardDisposition.Unpower);
+                            ConsoleWriter.Instance.PrintMessage("Reader connection closed");
+                        }
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                }
+            }
         }
     }
 }

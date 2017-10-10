@@ -26,49 +26,48 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
 {
     class Ok5422Samples
     {
-        private string _readerName;
-        public Menu Menu { get; private set; }
+        protected string _readerName;
+        public Menu Menu { get; protected set; }
         public Ok5422Samples(string readerName)
         {
             _readerName = readerName;
             CreateMenu();
         }
 
-        private void CreateMenu()
+        protected void CreateMenu()
         {
             var readerCapabilities = new Menu("Reader Capabilities", true)
             {
-                new MenuEntry("Tlv Version", () => ReaderCapabilitiesSample.ReadTlvVersion(_readerName), WaitKeyPress),
-                new MenuEntry("Device ID", () => ReaderCapabilitiesSample.ReadDeviceId(_readerName), WaitKeyPress),
-                new MenuEntry("Product Name", () => ReaderCapabilitiesSample.ReadProductName(_readerName), WaitKeyPress),
-                new MenuEntry("Product Platform", () => ReaderCapabilitiesSample.ReadProductPlatform(_readerName), WaitKeyPress),
-                new MenuEntry("Enabled CL Feaures", () => ReaderCapabilitiesSample.ReadEnabledClFeatures(_readerName), WaitKeyPress),
-                new MenuEntry("Firmware Version", () => ReaderCapabilitiesSample.ReadFirmwareVersion(_readerName), WaitKeyPress),
-                new MenuEntry("HF Controller Version", () => ReaderCapabilitiesSample.ReadHfControllerVersion(_readerName), WaitKeyPress),
-                new MenuEntry("Hardware Version", () => ReaderCapabilitiesSample.ReadHardwareVersion(_readerName), WaitKeyPress),
-                new MenuEntry("Host Interfaces", () => ReaderCapabilitiesSample.ReadHostInterfaces(_readerName), WaitKeyPress),
-                new MenuEntry("Number of Contact Slots", () => ReaderCapabilitiesSample.ReadNumberOfContactSlots(_readerName), WaitKeyPress),
-                new MenuEntry("Number of Contactless Slots", () => ReaderCapabilitiesSample.ReadNumberOfContactlessSlots(_readerName), WaitKeyPress),
-                new MenuEntry("Number of Antennas", () => ReaderCapabilitiesSample.ReadNumberOfAntennas(_readerName), WaitKeyPress),
-                new MenuEntry("Human Interfaces", () => ReaderCapabilitiesSample.ReadHumanInterfaces(_readerName), WaitKeyPress),
-                new MenuEntry("Vendor Name", () => ReaderCapabilitiesSample.ReadVendorName(_readerName), WaitKeyPress),
-                new MenuEntry("Exchange Level", () => ReaderCapabilitiesSample.ReadExchangeLevel(_readerName), WaitKeyPress),
-                new MenuEntry("Serial Number", () => ReaderCapabilitiesSample.ReadSerialNumber(_readerName), WaitKeyPress),
-                new MenuEntry("HF Controller Type", () => ReaderCapabilitiesSample.ReadHfControllerType(_readerName), WaitKeyPress),
-                new MenuEntry("Size of User EEPROM", () => ReaderCapabilitiesSample.ReadSizeOfUserEeprom(_readerName), WaitKeyPress),
-                new MenuEntry("Firmware Label", () => ReaderCapabilitiesSample.ReadFirmwareLabel(_readerName), WaitKeyPress),
+                new MenuEntry("Tlv Version",                 () => new ReaderCapabilitiesSample.TlvVersion().Run(_readerName),               WaitKeyPress),
+                new MenuEntry("Device ID",                   () => new ReaderCapabilitiesSample.DeviceId().Run(_readerName),                 WaitKeyPress),
+                new MenuEntry("Product Name",                () => new ReaderCapabilitiesSample.ProductName().Run(_readerName),              WaitKeyPress),
+                new MenuEntry("Product Platform",            () => new ReaderCapabilitiesSample.ProductPlatform().Run(_readerName),          WaitKeyPress),
+                new MenuEntry("Enabled CL Feaures",          () => new ReaderCapabilitiesSample.EnabledClFeatures().Run(_readerName),        WaitKeyPress),
+                new MenuEntry("Firmware Version",            () => new ReaderCapabilitiesSample.FirmwareVersion().Run(_readerName),          WaitKeyPress),
+                new MenuEntry("HF Controller Version",       () => new ReaderCapabilitiesSample.HfControllerVersion().Run(_readerName),      WaitKeyPress),
+                new MenuEntry("Hardware Version",            () => new ReaderCapabilitiesSample.HardwareVersion().Run(_readerName),          WaitKeyPress),
+                new MenuEntry("Host Interfaces",             () => new ReaderCapabilitiesSample.HostInterfaces().Run(_readerName),           WaitKeyPress),
+                new MenuEntry("Number of Contact Slots",     () => new ReaderCapabilitiesSample.NumberOfContactSlots().Run(_readerName),     WaitKeyPress),
+                new MenuEntry("Number of Contactless Slots", () => new ReaderCapabilitiesSample.NumberOfContactlessSlots().Run(_readerName), WaitKeyPress),
+                new MenuEntry("Number of Antennas",          () => new ReaderCapabilitiesSample.NumberOfAntennas().Run(_readerName),         WaitKeyPress),
+                new MenuEntry("Human Interfaces",            () => new ReaderCapabilitiesSample.HumanInterfaces().Run(_readerName),          WaitKeyPress),
+                new MenuEntry("Vendor Name",                 () => new ReaderCapabilitiesSample.VendorName().Run(_readerName),               WaitKeyPress),
+                new MenuEntry("Exchange Level",              () => new ReaderCapabilitiesSample.ExchangeLevel().Run(_readerName),            WaitKeyPress),
+                new MenuEntry("Serial Number",               () => new ReaderCapabilitiesSample.SerialNumber().Run(_readerName),             WaitKeyPress),
+                new MenuEntry("HF Controller Type",          () => new ReaderCapabilitiesSample.HfControllerType().Run(_readerName),         WaitKeyPress),
+                new MenuEntry("Size of User EEPROM",         () => new ReaderCapabilitiesSample.SizeOfUserEeprom().Run(_readerName),         WaitKeyPress),
+                new MenuEntry("Firmware Label",              () => new ReaderCapabilitiesSample.FirmwareLabel().Run(_readerName),            WaitKeyPress),
             };
             var userEeprom = new Menu("User EEPROM", true)
             {
-                new MenuEntry("Read Example", () => ReaderEepromSample.ReadEeprom(_readerName), WaitKeyPress),
-                new MenuEntry("Write Example", () => ReaderEepromSample.WriteEeprom(_readerName), WaitKeyPress),
-
+                new MenuEntry("Read Example",  () => new ReaderEepromSample.ReadEeprom().Run(_readerName),  WaitKeyPress),
+                new MenuEntry("Write Example", () => new ReaderEepromSample.WriteEeprom().Run(_readerName), WaitKeyPress),
             };
             var configurationControl = new Menu("Configuration Control", true)
             {
-                new MenuEntry("Reboot Reader", () => ReaderConfigurationControlSample.RebootReader(_readerName), WaitKeyPress),
-                new MenuEntry("Restore Factory Defaults", () => ReaderConfigurationControlSample.RestoreFactoryDefaults(_readerName), WaitKeyPress),
-                new MenuEntry("Apply Settings", () => ReaderConfigurationControlSample.ApplySettings(_readerName), WaitKeyPress),
+                new MenuEntry("Reboot Reader",            () => new ReaderConfigurationControlSample.RebootDevice().Run(_readerName),           WaitKeyPress),
+                new MenuEntry("Restore Factory Defaults", () => new ReaderConfigurationControlSample.RestoreFactoryDefaults().Run(_readerName), WaitKeyPress),
+                new MenuEntry("Apply Settings",           () => new ReaderConfigurationControlSample.ApplySettings().Run(_readerName),          WaitKeyPress),
             };
             var contactSlotConfiguration = new Menu("Contact Slot Configuration", true)
             {
@@ -137,26 +136,27 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
             };
             var mifareExamples = new Menu("Mifare Classic 1k/4K Examples", true)
             {
-                new MenuEntry("Load key without Secure Session Example", () => ContactlessCardCommunicationSample.LoadMifareKeyExample(_readerName), WaitKeyPress),
-                new MenuEntry("Load key with Secure Session Example", () => ContactlessCardCommunicationSample.LoadMifareKeyWithSecureSessionExample(_readerName), WaitKeyPress),
-                new MenuEntry("Read Example", () => ContactlessCardCommunicationSample.ReadMifareClassic1k4kExample(_readerName), WaitKeyPress),
-                new MenuEntry("Write Example", () => ContactlessCardCommunicationSample.WriteMifareClassic1k4kExample(_readerName), WaitKeyPress),
-                new MenuEntry("Increment Example", () => ContactlessCardCommunicationSample.IncrementMifareClassic1k4kExample(_readerName), WaitKeyPress),
-                new MenuEntry("Decrement Example", () => ContactlessCardCommunicationSample.DecrementMifareClassic1k4kExample(_readerName), WaitKeyPress),
+                new MenuEntry("Load key without Secure Session Example", () => new ExampleWithMifareClassic.LoadKeyExample().Run(_readerName),                     WaitKeyPress),
+                new MenuEntry("Get Card UID Example",                    () => new GetDataExample().Run(_readerName),                                              WaitKeyPress),
+                new MenuEntry("Get Card Historical Bytes Example",       () => new GetHistoricalBytesExample().Run(_readerName),                                   WaitKeyPress),
+                new MenuEntry("Read Example",                            () => new ExampleWithMifareClassic.ReadBinaryMifareClassic1kExample().Run(_readerName),   WaitKeyPress),
+                new MenuEntry("Write Example",                           () => new ExampleWithMifareClassic.UpdateBinaryMifareClassic1kExample().Run(_readerName), WaitKeyPress),
+                new MenuEntry("Increment Example",                       () => new ExampleWithMifareClassic.IncrementMifareClassic1kExample().Run(_readerName),    WaitKeyPress),
+                new MenuEntry("Decrement Example",                       () => new ExampleWithMifareClassic.DecrementMifareClassic1kExample().Run(_readerName),    WaitKeyPress),
             };
             var iclassExamples = new Menu("iClass Examples", true)
             {
-                new MenuEntry("Load iClass and Secure Session keys Example", () => ContactlessCardCommunicationSample.SecureSessionLoadKeyExample(_readerName), WaitKeyPress),
-                new MenuEntry("Read Binary iClass 16k Example", () => ContactlessCardCommunicationSample.ReadBinaryiClass16kExample(_readerName), WaitKeyPress),
-                new MenuEntry("Update Binary iClass 16k Example", () => ContactlessCardCommunicationSample.UpdateBinaryiClass16kExample(_readerName), WaitKeyPress),
-                new MenuEntry("Read Binary iClass 2ks Example", () => ContactlessCardCommunicationSample.ReadBinaryiClass2ksExample(_readerName), WaitKeyPress),
-                new MenuEntry("Update Binary iClass 2ks Example", () => ContactlessCardCommunicationSample.UpdateBinaryiClass2ksExample(_readerName), WaitKeyPress),
+                new MenuEntry("Load iClass and Secure Session keys Example", () => new ExampleWithiClass.LoadKeyToPcScContainerExample().Run(_readerName), WaitKeyPress),
+                new MenuEntry("Get Card CSN Example",                        () => new GetDataExample().Run(_readerName),                                  WaitKeyPress),
+                new MenuEntry("Read Binary iClass 16k Example",              () => new ExampleWithiClass.ReadBinaryiClass16kExample().Run(_readerName),    WaitKeyPress),
+                new MenuEntry("Update Binary iClass 16k Example",            () => new ExampleWithiClass.UpdateBinaryiClass16kExample().Run(_readerName),  WaitKeyPress),
+                new MenuEntry("Read Binary iClass 2ks Example",              () => new ExampleWithiClass.ReadBinaryiClass2ksExample().Run(_readerName),    WaitKeyPress),
+                new MenuEntry("Update Binary iClass 2ks Example",            () => new ExampleWithiClass.UpdateBinaryiClass2ksExample().Run(_readerName),  WaitKeyPress),
             };
             var contactlessCardExamples = new Menu("Contactless Card Examples", true)
             {
                 new MenuEntry("Mifare Classic 4K Examples", mifareExamples),
-                new MenuEntry("Mifare Desfire EV1 Example", () => ContactlessCardCommunicationSample.MifareDesfireEV1Example(_readerName), WaitKeyPress),
-                new MenuEntry("Seos Example", () => ContactlessCardCommunicationSample.SeosExample(_readerName), WaitKeyPress),
+                new MenuEntry("Seos Example", () => new GetDataExample().Run(_readerName), WaitKeyPress),
                 new MenuEntry("iClass Example", iclassExamples),
             };
 
@@ -171,7 +171,7 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
             };
         }
 
-        private void WaitKeyPress()
+        protected void WaitKeyPress()
         {
             Console.WriteLine("Press key to continue");
             Console.ReadLine();

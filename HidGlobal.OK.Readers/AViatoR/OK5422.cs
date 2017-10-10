@@ -39,30 +39,10 @@ namespace HidGlobal.OK.Readers.AViatoR
    
     public class OK5422ContactlessSlotConfiguration
     {
-        public OK5422Iso14443TypeAConfig Iso14443TypeAConfiguration => new OK5422Iso14443TypeAConfig();
-        public OK5422Iso14443TypeBConfig Iso14443TypeBConfiguration => new OK5422Iso14443TypeBConfig();
-        public OK5422iClassConfig iClassConfiguration => new OK5422iClassConfig();
+        public Iso14443TypeAConfiguration Iso14443TypeAConfiguration => new Iso14443TypeAConfiguration();
+        public Iso14443TypeBConfiguration Iso14443TypeBConfiguration => new Iso14443TypeBConfiguration();
+        public iClassConfiguration iClassConfiguration => new iClassConfiguration();
         public OK5422ContactlessCommon ContactlessCommon => new OK5422ContactlessCommon();
-    }
-    #region OK5022ContactlessSlotConfiguration
-
-    public class OK5422Iso14443TypeAConfig
-    {
-        public Iso14443TypeAEnable Enable => new Iso14443TypeAEnable();
-        public Iso14443TypeARxTxBaudRate RxTxBaudRate => new Iso14443TypeARxTxBaudRate();
-        public MifareKeyCache MifareKeyCache => new MifareKeyCache();
-        public MifarePreferred MifarePreferred => new MifarePreferred();
-    }
-
-    public class OK5422Iso14443TypeBConfig
-    {
-        public Iso14443TypeBEnable Enable => new Iso14443TypeBEnable();
-        public Iso14443TypeBRxTxBaudRate RxTxBaudRate => new Iso14443TypeBRxTxBaudRate();
-    }
-
-    public class OK5422iClassConfig
-    {
-        public iClass15693Enable Enable => new iClass15693Enable();
     }
 
     public class OK5422ContactlessCommon
@@ -73,5 +53,4 @@ namespace HidGlobal.OK.Readers.AViatoR
         public PollingRFModuleEnable PollingRFModule => new PollingRFModuleEnable();
     }
 
-    #endregion
 }

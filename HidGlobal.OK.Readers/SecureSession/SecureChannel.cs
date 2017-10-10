@@ -23,10 +23,11 @@ using HidGlobal.OK.Readers.Components;
 using System;
 using System.Linq;
 using System.Security.Cryptography;
+using HidGlobal.OK.Readers.Utilities;
 
 namespace HidGlobal.OK.Readers.SecureSession
 {
-    public class SecureChannel : IDisposable
+    public class SecureChannel : ISecureChannel
     {
         protected static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -48,7 +49,7 @@ namespace HidGlobal.OK.Readers.SecureSession
         /// Current status of secure channel.
         /// </summary>
         SessionStatus _sessionStatus;
-        public bool IsSessionEstablished { get { return _sessionStatus == SessionStatus.Established;  } }
+        public bool IsSessionActive { get { return _sessionStatus == SessionStatus.Established;  } }
         /// <summary>
         /// Reader 16-bytes response to Get Challange request.
         /// </summary>
@@ -78,61 +79,18 @@ namespace HidGlobal.OK.Readers.SecureSession
         /// </summary>
         string _sessionMacKey;
         /// <summary>
-        /// Key type used to establish secure session.
+        /// Key slot used to establish secure session.
         /// </summary>
-        SessionAccessKeyType _keyType;
+        byte _keySlot;
         /// <summary>
         /// Reader object
         /// </summary>
         IReader _reader;
 
-        bool _isDirect;
-
         public SecureChannel(IReader reader)
         {
             _sessionStatus          = SessionStatus.NotEstablished;
             _reader                 = reader;
-        }
-
-        byte[] OctetStringToByteArray(string hex)
-        {
-            if (string.IsNullOrWhiteSpace(hex))
-            {
-                log.Error("OctetStringToByteArray function parameter is null or whitespace.");
-                return null;
-            }
-            // Remove delimeters
-            hex = hex.Replace(" ", "");
-            hex = hex.Replace("-", "");
-
-            if (hex.Length % 2 != 0)
-                hex = hex.Insert(0, "0");
-            try
-            {
-                return Enumerable.Range(0, hex.Length / 2).Select(x => Convert.ToByte(hex.Substring(x * 2, 2), 16)).ToArray();
-            }
-            catch (Exception error)
-            {
-                log.Error(null, error);
-                return null;
-            }
-        }
-        string ByteArrayToOctetString(byte[] bytes)
-        {
-            if (bytes == null)
-            {
-                log.Error("ByteArrayToOctetString function parameter is null.");
-                return null;
-            }
-            try
-            {
-                return bytes.Select(x => x.ToString("X2")).Aggregate((s1, s2) => s1 + s2);
-            }
-            catch (Exception error)
-            {
-                log.Error(null, error);
-                return null;
-            }
         }
         /// <summary>
         /// Retuns true if bitwise AND of two arrays is not equal to 0.
@@ -145,9 +103,14 @@ namespace HidGlobal.OK.Readers.SecureSession
             var arrayLength = arrayA.Length >= arrayB.Length ? arrayA.Length : arrayB.Length;
             // Pads the arrays with 0x00 on the left side to appropriate length
             if (arrayA.Length != arrayLength)
-                arrayA = OctetStringToByteArray(BitConverter.ToString(arrayA).Replace("-", "").PadLeft((arrayLength - arrayA.Length) * 2, '0'));
+                arrayA = BinaryHelper.ConvertOctetStringToBytes(BitConverter.ToString(arrayA)
+                    .Replace("-", "")
+                    .PadLeft((arrayLength - arrayA.Length) * 2, '0'));
+
             if (arrayB.Length != arrayLength)
-                arrayB = OctetStringToByteArray(BitConverter.ToString(arrayB).Replace("-", "").PadLeft((arrayLength - arrayB.Length) * 2, '0'));
+                arrayB = BinaryHelper.ConvertOctetStringToBytes(BitConverter.ToString(arrayB)
+                    .Replace("-", "")
+                    .PadLeft((arrayLength - arrayB.Length) * 2, '0'));
 
             for (var i = 0; i < arrayLength; i++)
             {
@@ -168,9 +131,14 @@ namespace HidGlobal.OK.Readers.SecureSession
             var result = new byte[arrayLength];
             // Pads the arrays with 0x00 on the left side to appropriate length
             if (arrayA.Length != arrayLength)
-                arrayA = OctetStringToByteArray(BitConverter.ToString(arrayA).Replace("-", "").PadLeft((arrayLength - arrayA.Length) * 2, '0'));
+                arrayA = BinaryHelper.ConvertOctetStringToBytes(BitConverter.ToString(arrayA)
+                    .Replace("-", "")
+                    .PadLeft((arrayLength - arrayA.Length) * 2, '0'));
+
             if (arrayB.Length != arrayLength)
-                arrayB = OctetStringToByteArray(BitConverter.ToString(arrayB).Replace("-", "").PadLeft((arrayLength - arrayB.Length) * 2, '0'));
+                arrayB = BinaryHelper.ConvertOctetStringToBytes(BitConverter.ToString(arrayB)
+                    .Replace("-", "")
+                    .PadLeft((arrayLength - arrayB.Length) * 2, '0'));
 
             for (var i = 0; i < arrayLength; i++)
                 result[i] = (byte)(arrayA[i] & arrayB[i]);
@@ -279,86 +247,54 @@ namespace HidGlobal.OK.Readers.SecureSession
             byte[] key2 = CMac.GetHashTag(macKey, data.Concat<byte>(new byte[] { 0x02, 0x01, 0x00 }).ToArray());
             return key1.Concat(key2).ToArray();
         }
-        bool Connect(bool connectReaderWithoutCard)
+        bool Connect()
         {
             if (_reader.IsConnected != false)
                 _reader.Disconnect(CardDisposition.Unpower);
 
-            if (connectReaderWithoutCard)
-                _reader.ConnectDirect();
-            else
-                _reader.Connect(Components.ReaderSharingMode.Exclusive, Components.Protocol.Any);
+            _reader.Connect(Components.ReaderSharingMode.Exclusive, Components.Protocol.Any);
 
             if (_reader.IsConnected != true)
                 return false;
             else
                 return true;
         }
-        string Send(string data, bool connectReaderWithoutCard)
+        
+        public void Establish(string key, byte keySlot)
         {
-            if (connectReaderWithoutCard)
-                return _reader.Control(Components.ReaderControlCode.IOCTL_CCID_ESCAPE, data);
-            else
-                return _reader.Transmit(data);
-        }
-
-        /// <summary>
-        /// Establish secure session.
-        /// </summary>
-        /// <param name="macKey">16 byte long key.</param>
-        /// <param name="keyType">Key type defining the access level.</param>
-        /// <param name="connectReaderWithoutCard">Use <see cref="IReader.ConnectDirect"/> if true, otherwise use <see cref="IReader.Connect(Components.ReaderSharingMode, Components.Protocol)"/>.</param>
-        /// <param name="encryptionKey">16 byte long key.</param>
-        /// <returns>True if ends with success, false otherwise.</returns>
-        public bool EstablishSecureSession(string encryptionKey, string macKey, SessionAccessKeyType keyType, bool connectReaderWithoutCard = false)
-        {
-            _keyType = keyType;
-            _isDirect = connectReaderWithoutCard;
-            var key = (encryptionKey + macKey).Replace(" ", "");
-
+            _keySlot = keySlot;
             if (key.Length != (4 * _macLength))
             {
                 log.Error($"{nameof(key)} length invalid, expected 32 bytes key");
-                return false;
+                return;
             }
 
             _sessionEncryptionKey = key.Substring(0, 2 * _keyLength);
             _sessionMacKey = key.Substring(2 * _keyLength);
 
-            if (!Connect(_isDirect))
+            if (!Connect())
             {
                 log.Error($"Unable to connect to reader: {_reader.PcscReaderName}");
-                return false;
+                return;
             }
 
             GetChallange();
             var response = HostAuthentication();
             ReaderAuthentication(response);
-            if (_sessionStatus != SessionStatus.Established)
-                return false;
-            else
-                return true;
         }
-        /// <summary>
-        /// Establish secure session.
-        /// </summary>
-        /// <param name="macKey">16 byte long key.</param>
-        /// <param name="keyType">Key type defining the access level.</param>
-        /// <param name="connectReaderWithoutCard">Use <see cref="IReader.ConnectDirect"/> if true, otherwise use <see cref="IReader.Connect(Components.ReaderSharingMode, Components.Protocol)"/>.</param>
-        /// <param name="encryptionKey">16 byte long key.</param>
-        /// <returns>True if ends with success, false otherwise.</returns>
-        public bool EstablishSecureSession(byte[] encryptionKey, byte[] macKey, SessionAccessKeyType keyType, bool connectReaderWithoutCard = false)
+        
+        public void Establish(byte[] key, byte keySlot)
         {
-            return EstablishSecureSession(ByteArrayToOctetString(encryptionKey), ByteArrayToOctetString(macKey), keyType, connectReaderWithoutCard);
+            Establish(BinaryHelper.ConvertBytesToOctetString(key), keySlot);
         }
 
         void GetChallange()
         {
             _sessionStatus = SessionStatus.GetChallengePhase;
 
-            string getChallangeApdu = "FF7200" + ((int)_keyType).ToString("X2") + "00";
+            string getChallangeApdu = "FF7200" + _keySlot.ToString("X2") + "00";
 
-            var response = Send(getChallangeApdu, _isDirect);
+            var response = _reader.Transmit(getChallangeApdu);
 
             if (response.Substring(response.Length - 4) != "9000")
             {
@@ -386,17 +322,17 @@ namespace HidGlobal.OK.Readers.SecureSession
                 randomGenerator.GetBytes(hostKey);
                 randomGenerator.GetBytes(hostNonce);
 
-                _hostKey = ByteArrayToOctetString(hostKey);
-                _hostNonce = ByteArrayToOctetString(hostNonce);
+                _hostKey = BinaryHelper.ConvertBytesToOctetString(hostKey);
+                _hostNonce = BinaryHelper.ConvertBytesToOctetString(hostNonce);
             }
 
             // encrypy data
-            byte[] plain = OctetStringToByteArray(_hostNonce + _readerNonce + _hostKey);
-            var mac = AesSivMac(OctetStringToByteArray(_sessionMacKey), new byte[] { (byte)_keyType }, plain);
-            var enc = AesSivCtr(OctetStringToByteArray(_sessionEncryptionKey), mac, plain);
+            byte[] plain = BinaryHelper.ConvertOctetStringToBytes(_hostNonce + _readerNonce + _hostKey);
+            var mac = AesSivMac(BinaryHelper.ConvertOctetStringToBytes(_sessionMacKey), new byte[] { _keySlot }, plain);
+            var enc = AesSivCtr(BinaryHelper.ConvertOctetStringToBytes(_sessionEncryptionKey), mac, plain);
 
-            string mutualAuthenticationApdu = "FF72010040" + ByteArrayToOctetString(enc.Concat(mac).ToArray());
-            var response = Send(mutualAuthenticationApdu, _isDirect);
+            string mutualAuthenticationApdu = "FF72010040" + BinaryHelper.ConvertBytesToOctetString(enc.Concat(mac).ToArray());
+            var response = _reader.Transmit(mutualAuthenticationApdu);
 
             if (response.Substring(response.Length - 4) != "9000")
             {
@@ -416,11 +352,11 @@ namespace HidGlobal.OK.Readers.SecureSession
                 return;
             }
             
-            var data = OctetStringToByteArray(hostAuthResponse.Substring(0, hostAuthResponse.Length - 4));
+            var data = BinaryHelper.ConvertOctetStringToBytes(hostAuthResponse.Substring(0, hostAuthResponse.Length - 4));
             var mac2 = data.Skip(_nonceLength + _nonceLength + _keyLength).Take(_macLength).ToArray();
 
-            var plain2 = AesSivCtr(OctetStringToByteArray(_sessionEncryptionKey), mac2, data.Take(_nonceLength + _nonceLength + _keyLength).ToArray());
-            var mac3 = AesSivMac(OctetStringToByteArray(_sessionMacKey), new byte[] { (byte)_keyType }, plain2);
+            var plain2 = AesSivCtr(BinaryHelper.ConvertOctetStringToBytes(_sessionEncryptionKey), mac2, data.Take(_nonceLength + _nonceLength + _keyLength).ToArray());
+            var mac3 = AesSivMac(BinaryHelper.ConvertOctetStringToBytes(_sessionMacKey), new byte[] { _keySlot }, plain2);
 
             if (!Enumerable.SequenceEqual(mac2, mac3))
             {
@@ -428,24 +364,28 @@ namespace HidGlobal.OK.Readers.SecureSession
                 _sessionStatus = SessionStatus.NotEstablished;
                 return;
             }
-            if (!Enumerable.SequenceEqual(plain2.Take(_nonceLength).ToArray(), OctetStringToByteArray(_readerNonce)))
+            if (!Enumerable.SequenceEqual(plain2.Take(_nonceLength).ToArray(), BinaryHelper.ConvertOctetStringToBytes(_readerNonce)))
             {
                 log.Error("Reader nonce mismatch. Session Terminated.");
                 _sessionStatus = SessionStatus.NotEstablished;
                 return;
             }
-            if (!Enumerable.SequenceEqual(plain2.Skip(_nonceLength).Take(_nonceLength).ToArray(), OctetStringToByteArray(_hostNonce)))
+            if (!Enumerable.SequenceEqual(plain2.Skip(_nonceLength).Take(_nonceLength).ToArray(), BinaryHelper.ConvertOctetStringToBytes(_hostNonce)))
             {
                 log.Error("Host nonce mismatch. Session Terminated.");
                 _sessionStatus = SessionStatus.NotEstablished;
                 return;
             }
 
-            _readerKey = ByteArrayToOctetString(plain2.Skip(_nonceLength + _nonceLength).Take(_keyLength).ToArray());
+            _readerKey = BinaryHelper.ConvertBytesToOctetString(plain2.Skip(_nonceLength + _nonceLength)
+                .Take(_keyLength)
+                .ToArray());
 
-            var sessionkeys = AesSp800108(OctetStringToByteArray(_hostKey + _readerKey), OctetStringToByteArray(_sessionMacKey));
-            _sessionEncryptionKey = ByteArrayToOctetString(sessionkeys.Take(_keyLength).ToArray());
-            _sessionMacKey = ByteArrayToOctetString(sessionkeys.Skip(_keyLength).Take(_keyLength).ToArray());
+            var sessionkeys = AesSp800108(BinaryHelper.ConvertOctetStringToBytes(_hostKey + _readerKey),
+                BinaryHelper.ConvertOctetStringToBytes(_sessionMacKey));
+
+            _sessionEncryptionKey = BinaryHelper.ConvertBytesToOctetString(sessionkeys.Take(_keyLength).ToArray());
+            _sessionMacKey = BinaryHelper.ConvertBytesToOctetString(sessionkeys.Skip(_keyLength).Take(_keyLength).ToArray());
 
             _counter = new Counter(_hostNonce, _readerNonce);
 
@@ -454,10 +394,10 @@ namespace HidGlobal.OK.Readers.SecureSession
         /// <summary>
         /// Terminates established secure channel
         /// </summary>
-        public void TerminateSecureSession()
+        public void Terminate()
         {
             if (_sessionStatus == SessionStatus.Established)
-                Send("FF72030000", _isDirect);
+                _reader.Transmit("FF72030000");
 
             if (_reader.IsConnected)
                 _reader.Disconnect(CardDisposition.Unpower);
@@ -481,17 +421,17 @@ namespace HidGlobal.OK.Readers.SecureSession
             if (_sessionStatus != SessionStatus.Established)
             {
                 log.Error("Attempt to Send Command via secure session, while session is not established");
-                TerminateSecureSession();
+                Terminate();
                 return null;
             }
             // Encrypt data
             _counter.Increment();
 
-            byte[] mac = AesSivMac(OctetStringToByteArray(_sessionMacKey), OctetStringToByteArray(_counter.Value), OctetStringToByteArray(apdu));
-            byte[] enc = AesSivCtr(OctetStringToByteArray(_sessionEncryptionKey), mac, OctetStringToByteArray(apdu));
+            byte[] mac = AesSivMac(BinaryHelper.ConvertOctetStringToBytes(_sessionMacKey), BinaryHelper.ConvertOctetStringToBytes(_counter.Value), BinaryHelper.ConvertOctetStringToBytes(apdu));
+            byte[] enc = AesSivCtr(BinaryHelper.ConvertOctetStringToBytes(_sessionEncryptionKey), mac, BinaryHelper.ConvertOctetStringToBytes(apdu));
             byte[] data = enc.Concat(mac).ToArray();
 
-            var response = Send("FF720200" + data.Length.ToString("X2") + ByteArrayToOctetString(data), _isDirect);
+            var response = _reader.Transmit("FF720200" + data.Length.ToString("X2") + BinaryHelper.ConvertBytesToOctetString(data));
             
             // Decrypt response
             _counter.Increment();
@@ -500,25 +440,25 @@ namespace HidGlobal.OK.Readers.SecureSession
             {
                 log.Error($"Error {response.Substring(response.Length - 4)}\nSession Terminated.");
                 _sessionStatus = SessionStatus.NotEstablished;
-                TerminateSecureSession();
+                Terminate();
                 return response;
             }
 
-            byte[] cryptogram = OctetStringToByteArray(response.Substring(0, response.Length - 4));
+            byte[] cryptogram = BinaryHelper.ConvertOctetStringToBytes(response.Substring(0, response.Length - 4));
 
             byte[] dataEnc = cryptogram.Take(cryptogram.Length - _macLength).ToArray();
             byte[] dataMac = cryptogram.Skip(cryptogram.Length - _macLength).Take(_macLength).ToArray();
 
-            byte[] plain = AesSivCtr(OctetStringToByteArray(_sessionEncryptionKey), dataMac, dataEnc);
-            byte[] dataMac2 = AesSivMac(OctetStringToByteArray(_sessionMacKey), OctetStringToByteArray(_counter.Value), plain);
+            byte[] plain = AesSivCtr(BinaryHelper.ConvertOctetStringToBytes(_sessionEncryptionKey), dataMac, dataEnc);
+            byte[] dataMac2 = AesSivMac(BinaryHelper.ConvertOctetStringToBytes(_sessionMacKey), BinaryHelper.ConvertOctetStringToBytes(_counter.Value), plain);
             if (!Enumerable.SequenceEqual(dataMac, dataMac2))
             {
                 log.Error("Mac mismatch in decrypted response.\nSession Terminated.");
                 _sessionStatus = SessionStatus.NotEstablished;
-                TerminateSecureSession();
+                Terminate();
                 return null;
             }
-            return ByteArrayToOctetString(plain);
+            return BinaryHelper.ConvertBytesToOctetString(plain);
         }
         /// <summary>
         /// Encrypts and sends given apdu command, returns decrypted response.
@@ -527,7 +467,7 @@ namespace HidGlobal.OK.Readers.SecureSession
         /// <returns></returns>
         public byte[] SendCommand(byte[] apdu)
         {
-            return OctetStringToByteArray(SendCommand(ByteArrayToOctetString(apdu)));
+            return BinaryHelper.ConvertOctetStringToBytes(SendCommand(BinaryHelper.ConvertBytesToOctetString(apdu)));
         }
 
         #region IDisposable Support
@@ -539,11 +479,11 @@ namespace HidGlobal.OK.Readers.SecureSession
             {
                 if (disposing)
                 {
-                    if (IsSessionEstablished)
-                        TerminateSecureSession();
+                    if (IsSessionActive)
+                        Terminate();
 
                     if (_reader.IsConnected)
-                        _reader.Disconnect(CardDisposition.Unpower);
+                        _reader.Disconnect(CardDisposition.Reset);
 
                     _reader                 = null;
                 }

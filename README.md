@@ -9,6 +9,8 @@ Sample codes are written in C# and developed for Windows.
 ## Supported readers
 
 * OMNIKEY 5022
+* OMNIKEY 5023
+* OMNIKEY 5122
 * OMNIKEY 5422
 
 ## Functionality
@@ -16,42 +18,82 @@ Sample codes are written in C# and developed for Windows.
 * reader discovery based on the PCSC reader's name
 * connects only to the supported readers
 * OMNIKEY 5022
-    * reader information
-        * read 
-    * contactless slot configuration
-        * read
-        * write  
-    * user EEPROM
-        *  read
-        *  write
-    * MIFARE Classic 1K/4K
-        * load key 
-        * read one block  
-        * write one block 
-    * iClass 
-        * secure session example (requires keys)
-* OMNIKEY 5422
-    * reader information
-        * read 
-    * contactless slot configuration
-        * read
-        * write  
-	* contact slot configuration
-        * read
-        * write  
-    * user EEPROM
-        *  read
-        *  write
-    * MIFARE Classic 1K/4K
-        * load key 
-        * read one block  
-        * write one block 
-    * iClass 
-        * secure session example (requires keys)
-	* synchronous card
-		* L2
-		* L3
-		* I2C
+    * Configuration
+       * Read
+       * Write
+       * Display
+    * User EEPROM
+       * Read
+       * Write
+    * ISO/IEC 14443 Type A
+       * MIFARE Classic 1K/4K Example
+           * Read one block
+           * Write one block
+           * Increment value type block
+           * Decrement value type block
+           * Load key example
+    * iClass 2ks/16k example with secure session (requires keys)
+       * Load key example
+       * Read Binary
+       * Update Binary
+    * Seos example
+       * get UID
+    * ISO 15693
+       * Read one block
+       * Update one block
+* OMNIKEY 5422 / 5122
+    * Configuration
+        * Read
+        * Write
+        * Display
+    * User EEPROM
+        * Read
+        * Write
+    *ISO/IEC 14443 Type A
+        * MIFARE Classic 1K/4K Example
+            * Read one block
+            * Write one block
+            * Increment value type block
+            * Decrement value type block
+            * Load key example
+    * iClass 2ks/16k example with secure session
+        * Load key example
+        * Read Binary
+        * Update Binary
+    * Seos example
+        * Get UID
+    * Synchronous card example
+        * 2WBP
+        * 3WBP
+        * I2C
+* OMNIKEY 5022
+    * Configuration
+       * Read
+       * Write
+       * Display
+    * User EEPROM
+       * Read
+       * Write
+    * ISO/IEC 14443 Type A
+       * MIFARE Classic 1K/4K Example
+           * Read one block
+           * Write one block
+           * Increment value type block
+           * Decrement value type block
+           * Load key example
+    * iClass 2ks/16k example with secure session (requires keys)
+       * Load key example
+       * Read Binary
+       * Update Binary
+    * Secure Processor Examples
+	   * Read PACS data
+	   * Desfire example 
+
+## Release Notes
+
+* Added support for OMNIKEY 5023 reader
+* Added support for OMNIKEY 5122 reader
+* Refactored secure session examples
 
 ## Prerequisites
 

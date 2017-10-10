@@ -20,8 +20,24 @@
            THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *****************************************************************************************/
 
-namespace HidGlobal.OK.Readers.Components
+using System;
+using System.ComponentModel;
+using System.Reflection;
+
+namespace HidGlobal.OK.Readers.Utilities
 {
-    public enum BookNumber : byte { Book0 = 0x00, Book1 = 0x01 };
-    public enum PageNumber : byte { Page0 = 0x00, Page1 = 0x01, Page2 = 0x02, Page3 = 0x03, Page4 = 0x04, Page5 = 0x05, Page6 = 0x06, Page7 = 0x07 };
+    public static class EnumExtension
+    {
+        public static string GetEnumDescription(this Enum value)
+        {
+            FieldInfo fieldInfo = value.GetType().GetField(value.ToString());
+
+            DescriptionAttribute[] attributes =
+                (DescriptionAttribute[])fieldInfo.GetCustomAttributes(
+                    typeof(DescriptionAttribute),
+                    false);
+
+            return attributes.Length > 0 ? attributes[0].Description : value.ToString();
+        }
+    }
 }

@@ -54,9 +54,6 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
 
         private static IReader Connect(string readerName)
         {
-            if (!Program.WinscardContext.IsValid())
-                Program.WinscardContext.Establish(Scope.System);
-
             var reader = new Reader(Program.WinscardContext.Handle, readerName);
 
             var readerState = Program.WinscardContext.GetReaderState(reader.PcscReaderName);
@@ -456,7 +453,7 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
         public static void ReadIclass15693Configuration(string readerName)
         {
             var iclass15693Enable = new Readers.AViatoR.Components.iClass15693Enable();
-
+            
             IReader reader = Connect(readerName);
 
             if (!reader.IsConnected)
@@ -467,7 +464,7 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
             string response = reader.ConnectionMode != ReaderSharingMode.Direct
                 ? reader.Transmit(command)
                 : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
-            PrintData("iClass 15693", command, response, iclass15693Enable.TranslateGetResponse(response));
+            PrintData("iClass 15693 Enable", command, response, iclass15693Enable.TranslateGetResponse(response));
 
             reader.Disconnect(CardDisposition.Unpower);
         }
@@ -495,7 +492,7 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
 
             reader.Disconnect(CardDisposition.Unpower);
         }
-
+       
         // Contactless Common
         public static void SetEmdSupressionEnable(string readerName)
         {
@@ -678,7 +675,34 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
 
             reader.Disconnect(CardDisposition.Unpower);
         }
+        public static void ReadOK5023CommonConfiguration(string readerName)
+        {
+            var emdSupressionEnable = new Readers.AViatoR.Components.EmdSuppresionEnable();
+            var pollingSearchOrder = new Readers.AViatoR.Components.PollingSearchOrderConfig();
 
+            IReader reader = Connect(readerName);
+
+            if (!reader.IsConnected)
+                return;
+
+            // Read EMD Suppresion Enable
+            string command = emdSupressionEnable.GetApdu;
+            string response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
+            PrintData("EMD Supression", command, response, emdSupressionEnable.TranslateGetResponse(response));
+
+            // Read Polling Search Order
+            command = pollingSearchOrder.GetApdu;
+            response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
+            var responseData = new List<string>();
+            foreach (PollingSearchOrder element in pollingSearchOrder.TranslateGetResponse(response))
+            {
+                responseData.Add(element.ToString());
+            }
+
+            PrintData("PollingSearchOrder", command, response, responseData.ToArray());
+
+            reader.Disconnect(CardDisposition.Unpower);
+        }
         public static void ReadOK5422CommonConfiguration(string readerName)
         {
             var pollingRfModuleEnable = new Readers.AViatoR.Components.PollingRFModuleEnable();

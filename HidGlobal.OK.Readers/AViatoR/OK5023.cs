@@ -19,9 +19,36 @@
            (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
            THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *****************************************************************************************/
+using HidGlobal.OK.Readers.AViatoR.Components;
 
-namespace HidGlobal.OK.Readers.Components
+namespace HidGlobal.OK.Readers.AViatoR
 {
-    public enum BookNumber : byte { Book0 = 0x00, Book1 = 0x01 };
-    public enum PageNumber : byte { Page0 = 0x00, Page1 = 0x01, Page2 = 0x02, Page3 = 0x03, Page4 = 0x04, Page5 = 0x05, Page6 = 0x06, Page7 = 0x07 };
+    public class OK5023
+    {
+        public const int MaxInputEscapeCommandData = 262;
+        public const int MaxOutputEscapeCommandData = 464;
+        public ReaderCapabilities ReaderCapabilities => new ReaderCapabilities();
+        public ReaderConfigurationControl ReaderConfigurationControl => new ReaderConfigurationControl();
+        public ReaderEeprom ReaderEeprom => new ReaderEeprom();
+        public OK5023ContactlessSlotConfiguration ContactlessSlotConfiguration => new OK5023ContactlessSlotConfiguration();
+        public ContactlessCardCommunicationV2 ContactlessCardCommunication => new ContactlessCardCommunicationV2();
+    }
+
+    public class OK5023ContactlessSlotConfiguration
+    {
+        public FelicaConfiguration FelicaConfiguration => new FelicaConfiguration();
+        public Iso14443TypeAConfiguration Iso14443TypeAConfiguration => new Iso14443TypeAConfiguration();
+        public Iso14443TypeBConfiguration Iso14443TypeBConfiguration => new Iso14443TypeBConfiguration();
+        public Iso15693Configuration Iso15693Configuration => new Iso15693Configuration();
+        public iClassConfiguration iClassConfiguration => new iClassConfiguration();
+        public OK5023ContactlessCommon ContactlessCommon => new OK5023ContactlessCommon();
+    }
+
+    public class OK5023ContactlessCommon
+    {
+        public PollingSearchOrderConfig PollingSearchOrder => new PollingSearchOrderConfig();
+        public EmdSuppresionEnable EmdSuppression => new EmdSuppresionEnable();
+    }
+
+
 }

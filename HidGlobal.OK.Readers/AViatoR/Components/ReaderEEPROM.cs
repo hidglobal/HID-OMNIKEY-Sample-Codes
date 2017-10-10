@@ -19,6 +19,10 @@
            (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
            THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *****************************************************************************************/
+
+using System;
+using HidGlobal.OK.Readers.Utilities;
+
 namespace HidGlobal.OK.Readers.AViatoR.Components
 {
     public class ReaderEeprom
@@ -32,37 +36,39 @@ namespace HidGlobal.OK.Readers.AViatoR.Components
         {
             if (offset > Maxoffset)
             {
-                log.Error($"ReadCommand, Offset parameter grater then maximum value, current: {offset}, max: {Maxoffset}.");
-                return null;
+                throw new ArgumentOutOfRangeException($"Offset parameter grater then maximum value, current: {offset}, max: {Maxoffset}.");
             }
+
             if (Maxoffset + 1 >= offset + dataLength)
                 return "FF70076B0DA20BA009A7078102" + offset.ToString("X4") + "8201" + dataLength.ToString("X2") + "00";
 
-            log.Error("ReadCommand, Attempt to read data out of user eeprom space.");
-            return null;
+            throw new ArgumentOutOfRangeException("Attempt to read data out of user eeprom space.");
         }
 
         public string WriteCommand(ushort offset, string dataToWrite)
         {
-            dataToWrite = dataToWrite.Replace(" ", "");
-
+            if (dataToWrite == null)
+            {
+                throw new NullReferenceException($"String {nameof(dataToWrite)} can not be null.");
+            }
             if (dataToWrite.Length % 2 != 0)
             {
-                log.Error("dataToWrite string parameter cannot have fractional length in bytes.");
-                return null;
+                throw new ArgumentException($"String {nameof(dataToWrite)} length is not valid, expected even length.");
+            }
+            if (!BinaryHelper.IsValidHexString(dataToWrite))
+            {
+                throw new FormatException($"String {nameof(dataToWrite)} length contains illegal characters.");
+            }
+            if (offset > Maxoffset)
+            {
+                throw new ArgumentOutOfRangeException($"Offset parameter grater then maximum value, current: {offset}, max: {Maxoffset}.");
             }
 
             ushort dataLength = (ushort)(dataToWrite.Length / 2);
 
-            if (offset > Maxoffset)
-            {
-                log.Error($"ReadCommand, Offset parameter grater then maximum value, current: {offset}, max: {Maxoffset}.");
-                return null;
-            }
             if (0x0400 < offset + dataLength)
             {
-                log.Error("ReadCommand, Attempt to read data out of user eeprom space.");
-                return null;
+                throw new ArgumentOutOfRangeException("Attempt to write data out of user eeprom space.");
             }
 
             const string header = "FF70076B";
@@ -83,8 +89,7 @@ namespace HidGlobal.OK.Readers.AViatoR.Components
                 return header + tlvSelection;
             }
 
-            log.Error($"Single eeprom write apdu datafield cannot have more the 255 bytes of length, current apdu length: {dataLength + 16}");
-            return null;
+            throw new ArgumentOutOfRangeException($"Single eeprom write apdu datafield cannot have more the 255 bytes of length, current apdu length: {dataLength + 16}");
         }
     }
 

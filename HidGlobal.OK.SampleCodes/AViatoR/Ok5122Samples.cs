@@ -20,8 +20,10 @@
            THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *****************************************************************************************/
 
-namespace HidGlobal.OK.Readers.Components
+namespace HidGlobal.OK.SampleCodes.AViatoR
 {
-    public enum BookNumber : byte { Book0 = 0x00, Book1 = 0x01 };
-    public enum PageNumber : byte { Page0 = 0x00, Page1 = 0x01, Page2 = 0x02, Page3 = 0x03, Page4 = 0x04, Page5 = 0x05, Page6 = 0x06, Page7 = 0x07 };
+    class Ok5122Samples : Ok5422Samples
+    {
+        public Ok5122Samples(string readerName) : base(readerName) { }
+    }
 }

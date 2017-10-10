@@ -26,8 +26,6 @@ namespace HidGlobal.OK.Readers.SecureSession
 { 
     public class AesCounterMode : SymmetricAlgorithm
     {
-        protected static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
         /// <summary>
         /// Length of an array, in bytes, that contains the Counter.
         /// </summary>

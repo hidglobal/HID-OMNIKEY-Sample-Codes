@@ -20,12 +20,8 @@
            THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *****************************************************************************************/
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 using HidGlobal.OK.Readers.Components;
+using HidGlobal.OK.Readers.Utilities;
 
 
 namespace HidGlobal.OK.Readers
@@ -61,46 +57,6 @@ namespace HidGlobal.OK.Readers
         /// Connection status.
         /// </summary>
         public bool IsConnected => _cardConnectionHandle.IsConnected();
-        protected byte[] OctetStringToByteArray(string hex)
-        {
-            if (string.IsNullOrWhiteSpace(hex))
-            {
-                log.Error("OctetStringToByteArray function parameter is null or whitespace.");
-                return null;
-            }
-            // Remove delimeters
-            hex = hex.Replace(" ", "");
-            hex = hex.Replace("-", "");
-
-            if (hex.Length % 2 != 0)
-                hex = hex.Insert(0, "0");
-            try
-            {
-                return Enumerable.Range(0, hex.Length / 2).Select(x => Convert.ToByte(hex.Substring(x * 2, 2), 16)).ToArray();
-            }
-            catch (Exception error)
-            {
-                log.Error(null, error);
-                return null;
-            }
-        }
-        protected string ByteArrayToOctetString(byte[] bytes)
-        {
-            if (bytes == null)
-            {
-                log.Error("ByteArrayToOctetString function parameter is null.");
-                return null;
-            }
-            try
-            {
-                return bytes.Select(x => x.ToString("X2")).Aggregate((s1, s2) => s1 + s2);
-            }
-            catch (Exception error)
-            {
-                log.Error(null, error);
-                return null;
-            }
-        }
         /// <summary>
         /// 
         /// </summary>
@@ -119,7 +75,11 @@ namespace HidGlobal.OK.Readers
         /// <param name="preferredProtocol">Smart card protocol to be used in current connection.</param>
         public void Connect(ReaderSharingMode mode, Protocol preferredProtocol)
         {
-            CurrentErrorStatus = _cardConnectionHandle.Connect(_contextHandle, PcscReaderName, mode, preferredProtocol);            
+            CurrentErrorStatus = _cardConnectionHandle.Connect(_contextHandle, PcscReaderName, mode, preferredProtocol);
+            if (CurrentErrorStatus!=ErrorCodes.SCARD_S_SUCCESS)
+            {
+                throw new Exception(CurrentErrorStatus.ToString());
+            }
         }
         /// <summary>
         /// Establishes a connection between the calling application and a smart card in Direct mode, 
@@ -128,6 +88,10 @@ namespace HidGlobal.OK.Readers
         public void ConnectDirect()
         {
             CurrentErrorStatus = _cardConnectionHandle.Connect(_contextHandle, PcscReaderName, ReaderSharingMode.Direct, Protocol.None);
+            if (CurrentErrorStatus != ErrorCodes.SCARD_S_SUCCESS)
+            {
+                throw new Exception(CurrentErrorStatus.ToString());
+            }
         }
         /// <summary>
         /// Reestablishes an existing connection from the calling application to the smart card.
@@ -138,6 +102,10 @@ namespace HidGlobal.OK.Readers
         public void Reconnect(CardDisposition initialization, ReaderSharingMode mode, Protocol protocol)
         {
             CurrentErrorStatus = _cardConnectionHandle.Reconnect(initialization, mode, protocol);
+            if (CurrentErrorStatus != ErrorCodes.SCARD_S_SUCCESS)
+            {
+                throw new Exception(CurrentErrorStatus.ToString());
+            }
         }
         /// <summary>
         /// Terminates a connection between the calling application and a smart card.
@@ -146,6 +114,10 @@ namespace HidGlobal.OK.Readers
         public void Disconnect(CardDisposition disposition = CardDisposition.Eject)
         {
             CurrentErrorStatus = _cardConnectionHandle.Disconnect(disposition);
+            if (CurrentErrorStatus != ErrorCodes.SCARD_S_SUCCESS)
+            {
+                throw new Exception(CurrentErrorStatus.ToString());
+            }
         }
         /// <summary>
         ///  The function waits for the completion of all other transactions before it begins. After the transaction starts, 
@@ -154,6 +126,10 @@ namespace HidGlobal.OK.Readers
         public void BeginTransaction()
         {
             CurrentErrorStatus = _cardConnectionHandle.BeginTransaction();
+            if (CurrentErrorStatus != ErrorCodes.SCARD_S_SUCCESS)
+            {
+                throw new Exception(CurrentErrorStatus.ToString());
+            }
         }
         /// <summary>
         /// The SCardEndTransaction function completes a previously declared transaction, 
@@ -163,6 +139,10 @@ namespace HidGlobal.OK.Readers
         public void EndTransaction(CardDisposition disposition)
         {
             CurrentErrorStatus = _cardConnectionHandle.EndTransaction(disposition);
+            if (CurrentErrorStatus != ErrorCodes.SCARD_S_SUCCESS)
+            {
+                throw new Exception(CurrentErrorStatus.ToString());
+            }
         }
         /// <summary>
         /// State of smart card in the reader.
@@ -183,6 +163,10 @@ namespace HidGlobal.OK.Readers
         {
             var atr = new byte[0];
             CurrentErrorStatus = _cardConnectionHandle.Status(out atr);
+            if (CurrentErrorStatus != ErrorCodes.SCARD_S_SUCCESS)
+            {
+                throw new Exception(CurrentErrorStatus.ToString());
+            }
             return atr;
         }
         /// <summary>
@@ -195,6 +179,10 @@ namespace HidGlobal.OK.Readers
         {
             var output = new byte[0];
             CurrentErrorStatus = _cardConnectionHandle.Control(control, data, out output);
+            if (CurrentErrorStatus != ErrorCodes.SCARD_S_SUCCESS)
+            {
+                throw new Exception(CurrentErrorStatus.ToString());
+            }
             return output;
         }
         /// <summary>
@@ -205,14 +193,9 @@ namespace HidGlobal.OK.Readers
         /// <returns></returns>
         public virtual string Control(ReaderControlCode control, string data)
         {
-            var temp = OctetStringToByteArray(data);
-            if (temp == null)
-            {
-                log.Error("Wrong data of Control(ReaderControlCode, string) function string argument");
-                return null;
-            }
+            var temp = Utilities.BinaryHelper.ConvertOctetStringToBytes(data);
             temp = Control(control, temp);
-            return ByteArrayToOctetString(temp);
+            return Utilities.BinaryHelper.ConvertBytesToOctetString(temp);
         }
         /// <summary>
         /// Sends a service request to a smart card.
@@ -223,6 +206,10 @@ namespace HidGlobal.OK.Readers
         {
             var output = new byte[0];
             CurrentErrorStatus = _cardConnectionHandle.Transmit(data, out output);
+            if (CurrentErrorStatus != ErrorCodes.SCARD_S_SUCCESS)
+            {
+                throw new Exception(CurrentErrorStatus.ToString());
+            }
             return output;
         }
         /// <summary>
@@ -232,14 +219,9 @@ namespace HidGlobal.OK.Readers
         /// <returns></returns>
         public string Transmit(string data)
         {
-            var temp = OctetStringToByteArray(data);
-            if (temp == null)
-            {
-                log.Error("Wrong data of Transmit(string) function string argument");
-                return null;
-            }
+            var temp = BinaryHelper.ConvertOctetStringToBytes(data);
             temp = Transmit(temp);
-            return ByteArrayToOctetString(temp);
+            return BinaryHelper.ConvertBytesToOctetString(temp);
         }
         /// <summary>
         /// Gets the current reader's attributes from a given reader, driver, or smart card.
@@ -249,13 +231,12 @@ namespace HidGlobal.OK.Readers
         public byte[] GetAttribute(Attribiutes attributeId)
         {
             var output = new byte[0];
-            var retCode = _cardConnectionHandle.GetAttribiute(attributeId, out output);
-            CurrentErrorStatus = retCode;
-
-            if (retCode != ErrorCodes.SCARD_S_SUCCESS)
-                return null;
-            else
-                return output;
+            CurrentErrorStatus = _cardConnectionHandle.GetAttribiute(attributeId, out output);
+            if (CurrentErrorStatus != ErrorCodes.SCARD_S_SUCCESS)
+            {
+                throw new Exception(CurrentErrorStatus.ToString());
+            }
+            return output;
         }
         /// <summary>
         /// Sets a given reader attribute.

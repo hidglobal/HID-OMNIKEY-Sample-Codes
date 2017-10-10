@@ -33,52 +33,14 @@ namespace HidGlobal.OK.Readers.AViatoR
         public OK5022ContactlessSlotConfiguration ContactlessSlotConfiguration => new OK5022ContactlessSlotConfiguration();
         public ContactlessCardCommunication ContactlessCardCommunication => new ContactlessCardCommunication();
     }
-
-
-
-    
-
-
     public class OK5022ContactlessSlotConfiguration
     {
-        public OK5022FelicaConfig FelicaConfiguration => new OK5022FelicaConfig();
-        public OK5022Iso14443TypeAConfig Iso14443TypeAConfiguration => new OK5022Iso14443TypeAConfig();
-        public OK5022Iso14443TypeBConfig Iso14443TypeBConfiguration => new OK5022Iso14443TypeBConfig();
-        public OK5022Iso15693Config Iso15693Configuration => new OK5022Iso15693Config();
-        public OK5022iClassConfig iClassConfiguration => new OK5022iClassConfig();
+        public FelicaConfiguration FelicaConfiguration => new FelicaConfiguration();
+        public Iso14443TypeAConfiguration Iso14443TypeAConfiguration => new Iso14443TypeAConfiguration();
+        public Iso14443TypeBConfiguration Iso14443TypeBConfiguration => new Iso14443TypeBConfiguration();
+        public Iso15693Configuration Iso15693Configuration => new Iso15693Configuration();
+        public iClassConfiguration iClassConfiguration => new iClassConfiguration();
         public OK5022ContactlessCommon ContactlessCommon => new OK5022ContactlessCommon();
-    }
-
-    #region OK5022ContactlessSlotConfiguration
-
-    public class OK5022Iso14443TypeAConfig
-    {
-        public Iso14443TypeAEnable Enable => new Iso14443TypeAEnable();
-        public Iso14443TypeARxTxBaudRate RxTxBaudRate => new Iso14443TypeARxTxBaudRate();
-        public MifareKeyCache MifareKeyCache => new MifareKeyCache();
-        public MifarePreferred MifarePreferred => new MifarePreferred();
-    }
-
-    public class OK5022Iso14443TypeBConfig
-    {
-        public Iso14443TypeBEnable Enable => new Iso14443TypeBEnable();
-        public Iso14443TypeBRxTxBaudRate RxTxBaudRate => new Iso14443TypeBRxTxBaudRate();
-    }
-
-    public class OK5022Iso15693Config
-    {
-        public Iso15693Enable Enable => new Iso15693Enable();
-    }
-
-    public class OK5022iClassConfig
-    {
-        public iClass15693Enable Enable => new iClass15693Enable();
-    }
-
-    public class OK5022FelicaConfig
-    {
-        public FelicaEnable Enable => new FelicaEnable();
-        public FelicaRxTxBaudRate RxTxBaudRate => new FelicaRxTxBaudRate();
     }
 
     public class OK5022ContactlessCommon
@@ -88,9 +50,6 @@ namespace HidGlobal.OK.Readers.AViatoR
         public PollingSearchOrderConfig PollingSearchOrder => new PollingSearchOrderConfig();
         public EmdSuppresionEnable EmdSuppression => new EmdSuppresionEnable();
     }
-
-    #endregion
-
 }                                                  
                                                    
                                                    

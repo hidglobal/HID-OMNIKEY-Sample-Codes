@@ -27,8 +27,6 @@ namespace HidGlobal.OK.Readers.SecureSession
 {
     public class CounterModeCryptoTransform : ICryptoTransform
     {
-        protected static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly byte[] _counter;
         private readonly ICryptoTransform _counterEncryptor;
         private readonly Queue<byte> _xorMask = new Queue<byte>();

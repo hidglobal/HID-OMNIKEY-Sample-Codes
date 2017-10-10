@@ -19,6 +19,9 @@
            (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
            THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *****************************************************************************************/
+
+using System;
+using System.Linq;
 using HidGlobal.OK.Readers.Components;
 
 namespace HidGlobal.OK.Readers.AViatoR.Components
@@ -40,87 +43,100 @@ namespace HidGlobal.OK.Readers.AViatoR.Components
         public DecrementCommand Decrement => new DecrementCommand();
     }
 
+    public class ContactlessCardCommunicationV2
+    {
+        public LoadKeyCommand LoadKey => new LoadKeyCommand();
+
+        public GetDataCommand GetData => new GetDataCommand();
+
+        public ReadBinaryCommand ReadBinary => new ReadBinaryCommand();
+
+        public UpdateBinaryCommand UpdateBinary => new UpdateBinaryCommand();
+
+        public GeneralAuthenticateCommand GeneralAuthenticate => new GeneralAuthenticateCommand();
+
+        public IncrementDecrementCommand IncrementDecrement => new IncrementDecrementCommand();
+    }
 
     public class LoadKeyCommand
     {
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
-        private const byte MifareKeyLastSlot = 31;
-        private const byte iClassNonvolatileKeyLastSlot = 63;
-        private const byte iClassDESKeySlot = 64;
-        private const byte iClassVolatileKeyLastSlot = 66;
-        private const byte iClass3DESKeySlot = 67;
-        private const byte SecureSessionLastKeySlot = 73;
-        private const byte MifareKeySize = 6;
-        private const byte iClassNonvolatileKeySize = 8;
-        private const byte iClassDESKeySize = 8;
-        private const byte iClassVolatileKeySize = 8;
-        private const byte iClass3DESKeySize = 16;
-        private const byte SecureSessionKeySize = 16;
-
-        public string GetApdu(byte keySlot, string key)
+        // ToDo Currently only plain transmission is supported
+        public enum Transmission
         {
-            byte keyStructure = 0x00;
-            byte keyLength;
-            bool isCardKey;
-            bool isStoredInVolatileMemory;
+            Plain,
+        }
+        public enum Persistence
+        {
+            Volatile,
+            Persistent,
+        }
+        public enum KeyType
+        {
+            CardKey,
+            ReaderKey,
+        }
+        public enum KeyLength : byte
+        {
+            _6Bytes = 0x06,
+            _8Bytes = 0x08,
+            _16Bytes = 0x10,
+            _24Bytes = 0x18,
+            _32Bytes = 0x20,
+        }
+        public string GetApdu(byte keySlot, KeyType keyType, Persistence persistence, Transmission transmissionType, KeyLength keyLength, string key)
+        {
             key = key.Replace(" ", "").Replace("-", "");
 
-            if (keySlot <= MifareKeyLastSlot)
+            byte keyStructure = 0x00;
+
+            switch (keyType)
             {
-                keyLength = MifareKeySize;
-                isCardKey = true;
-                isStoredInVolatileMemory = false;
-            }
-            else if (keySlot <= iClassNonvolatileKeyLastSlot)
-            {
-                keyLength = iClassNonvolatileKeySize;
-                isCardKey = true;
-                isStoredInVolatileMemory = false;
-            }
-            else if (keySlot <= iClassDESKeySlot)
-            {
-                keyLength = iClassDESKeySize;
-                isCardKey = false;
-                isStoredInVolatileMemory = false;
-            }
-            else if (keySlot <= iClassVolatileKeyLastSlot)
-            {
-                keyLength = iClassVolatileKeySize;
-                isCardKey = true;
-                isStoredInVolatileMemory = true;
-            }
-            else if (keySlot <= iClass3DESKeySlot)
-            {
-                keyLength = iClass3DESKeySize;
-                isCardKey = false;
-                isStoredInVolatileMemory = false;
-            }
-            else if (keySlot <= SecureSessionLastKeySlot)
-            {
-                keyLength = SecureSessionKeySize;
-                isCardKey = false;
-                isStoredInVolatileMemory = false;
-            }
-            else
-            {
-                log.Error($"LoadKey function parameter {nameof(keySlot)} value cannot be higher then {SecureSessionLastKeySlot},\n current value: {keySlot}");
-                return null;
+                case KeyType.CardKey:
+                    break;
+                case KeyType.ReaderKey:
+                    keyStructure |= (1 << 7);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(keyType), keyType, null);
             }
 
-            if (!isCardKey)
-                keyStructure |= (1 << 7);
+            switch (transmissionType)
+            {
+                case Transmission.Plain:
+                    break;
+                // ToDo add more cases for transmission of encrypted key content if any reader support this feature
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(transmissionType), transmissionType, null);
+            }
 
-            if (!isStoredInVolatileMemory)
-                keyStructure |= (1 << 5);
+            switch (persistence)
+            {
+                case Persistence.Volatile:
+                    break;
+                case Persistence.Persistent:
+                    keyStructure |= (1 << 5);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(persistence), persistence, null);
+            }
 
-            if (2 * keyLength == key.Length)
-                return "FF82" + keyStructure.ToString("X2") + keySlot.ToString("X2") + keyLength.ToString("X2") + key;
-
-            log.Error($"LoadKey function parameter {nameof(key)} length is incorrect.\nExpected: {keyLength} bytes\nActual: {key.Replace(" ", "").Length} bytes");
-            return null;
+            switch (keyLength)
+            {
+                case KeyLength._6Bytes:
+                case KeyLength._8Bytes:
+                case KeyLength._16Bytes:
+                case KeyLength._24Bytes:
+                case KeyLength._32Bytes:
+                    if ((int) keyLength == Utilities.BinaryHelper.ConvertOctetStringToBytes(key).Length)
+                    {
+                        break;
+                    }
+                    throw new ArgumentException("Key length incorrect", nameof(key));
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(keyLength), keyLength, null);
+            }
+            return "FF82" + keyStructure.ToString("X2") + keySlot.ToString("X2") + ((byte)keyLength).ToString("X2") + key;
         }
-
     }
 
     public class GetDataCommand
@@ -157,9 +173,21 @@ namespace HidGlobal.OK.Readers.AViatoR.Components
 
     public class GeneralAuthenticateCommand
     {
-        public enum MifareKeyType : byte { MifareKeyA = 0x60, MifareKeyB = 0x61 };
-        public enum IClassKeyType : byte { PicoPassDebitKeyKD = 0x00, PicoPassCreditKeyKC = 0x01 };
-
+        public enum MifareKeyType : byte
+        {
+            MifareKeyA = 0x60,
+            MifareKeyB = 0x61
+        };
+        public enum iClassKeyType : byte
+        {
+            PicoPassDebitKeyKD = 0x00,
+            PicoPassCreditKeyKC = 0x01
+        };
+        public enum ImplicitSelection
+        {
+            On,
+            Off
+        };
         /// <summary>
         /// This command allows the user to authenticate a credential. Before using this command the correct
         /// keys must have been loaded to the relevant key slot. 
@@ -175,13 +203,13 @@ namespace HidGlobal.OK.Readers.AViatoR.Components
         /// For iCLASS keys these keys are preloaded onto the reader, so the application must just select the correct key number for the area they are attempting to access.
         /// Note: The reader will not allow the user to authenticate the HID area of a card outside of a secure session.
         /// </summary>
-        public string GetiClassApdu(BookNumber bookNumber, PageNumber pageNumber, bool authenticateWithImplicitSelect, IClassKeyType keyType, byte keySlot)
+        public string GetiClassApdu(BookNumber bookNumber, PageNumber pageNumber, ImplicitSelection implicitSelection, iClassKeyType keyType, byte keySlot)
         {
             int address = 0x0000;
 
             address |= (int)pageNumber;
             address |= bookNumber != BookNumber.Book0 ? (1 << 8) : 0;
-            address |= authenticateWithImplicitSelect ? (1 << 9) : 0;
+            address |= implicitSelection == ImplicitSelection.On ? (1 << 9) : 0;
 
             return "FF8600000501" + address.ToString("X4") + ((byte)keyType).ToString("X2") + keySlot.ToString("X2");
         }
@@ -190,20 +218,28 @@ namespace HidGlobal.OK.Readers.AViatoR.Components
     public class ReadBinaryCommand
     {
         public enum ReadOption : byte { WithoutSelect = 0x00, WithSelect = (1 << 4), WithDesDecrypted = (1 << 6), WithTripleDesDecrypted = (1 << 7) | (1 << 6) };
-
-        private string GetiClassReadApdu(ReadOption option, BookNumber bookNumber, PageNumber pageNumber, byte blockNumber, byte expectedLength)
+        /// <summary>
+        /// Returns full apdu command to read binary data form iClass card.
+        /// </summary>
+        /// <param name="option"> Read binary pcsc command parametr.</param>
+        /// <param name="blockNumber"></param>
+        /// <param name="expectedLength"></param>
+        /// <param name="bookNumber"> Used only if option set to <see cref="ReadOption.WithSelect"/></param>
+        /// <param name="pageNumber"> Used only if option set to <see cref="ReadOption.WithSelect"/></param>
+        /// <returns></returns>
+        public string GetiClassReadApdu(ReadOption option, byte blockNumber, byte expectedLength, BookNumber bookNumber = BookNumber.Book0, PageNumber pageNumber = PageNumber.Page0)
         {
-            if (option == ReadOption.WithSelect)
-            {
-                byte address = 0x00;
+            if (option != ReadOption.WithSelect)
+                return "FFB0" + ((byte) option).ToString("X2") + blockNumber.ToString("X2") +
+                       expectedLength.ToString("X2");
 
-                address |= (byte)option;
-                address |= bookNumber != BookNumber.Book0 ? (byte)(1 << 3) : (byte)0;
-                address |= (byte)pageNumber;
+            byte address = 0x00;
 
-                return "FFB0" + address.ToString("X2") + blockNumber.ToString("X2") + expectedLength.ToString("X2");
-            }
-            return "FFB0" + ((byte)option).ToString("X2") + blockNumber.ToString("X2") + expectedLength.ToString("X2");
+            address |= (byte)option;
+            address |= bookNumber != BookNumber.Book0 ? (byte)(1 << 3) : (byte)0;
+            address |= (byte)pageNumber;
+
+            return "FFB0" + address.ToString("X2") + blockNumber.ToString("X2") + expectedLength.ToString("X2");
         }
 
         public string GetMifareReadApdu(byte blockNumber, byte expectedLength)
@@ -211,24 +247,9 @@ namespace HidGlobal.OK.Readers.AViatoR.Components
             return "FFB0" + "00" + blockNumber.ToString("X2") + expectedLength.ToString("X2");
         }
 
-        public string GetiClassReadWithoutSelectApdu(byte blockNumber, byte expectedLength = 0)
+        public string GetApdu(byte msb, byte lsb, byte expectedLength)
         {
-            return GetiClassReadApdu(ReadOption.WithoutSelect, (BookNumber)(0xFF), (PageNumber)(0xFF), blockNumber, expectedLength);
-        }
-
-        public string GetiClassReadWithSelectApdu(BookNumber book, PageNumber page, byte blockNumber, byte expectedLength = 0)
-        {
-            return GetiClassReadApdu(ReadOption.WithSelect, book, page, blockNumber, expectedLength);
-        }
-
-        public string GetiClassReadWithDesDecryptedApdu(byte blockNumber, byte expectedLength = 0)
-        {
-            return GetiClassReadApdu(ReadOption.WithDesDecrypted, (BookNumber)(0xFF), (PageNumber)(0xFF), blockNumber, expectedLength);
-        }
-
-        public string GetiClassReadWithTripleDesDecryptedApdu(byte blockNumber, byte expectedLength = 0)
-        {
-            return GetiClassReadApdu(ReadOption.WithTripleDesDecrypted, (BookNumber)(0xFF), (PageNumber)(0xFF), blockNumber, expectedLength);
+            return "FFB0" + msb.ToString("X2") + lsb.ToString("X2") + expectedLength.ToString("X2");
         }
     }
     
@@ -239,7 +260,7 @@ namespace HidGlobal.OK.Readers.AViatoR.Components
             /// <summary>
             /// Update plain data.
             /// </summary>
-            Default = 0,
+            Plain = 0,
             /// <summary>
             /// Iclass card only, update DES encrypted.
             /// </summary>
@@ -260,33 +281,60 @@ namespace HidGlobal.OK.Readers.AViatoR.Components
     
     public class IncrementCommand
     {
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-        public string GetApdu(byte blockNumber, string data)
+        public string GetApdu(byte blockNumber, int incrementValue)
         {
-            data = data.Replace(" ", "").Replace("-", "");
-            if (data.Length != 8)
+            var data = BitConverter.GetBytes(incrementValue);
+            if (!BitConverter.IsLittleEndian)
             {
-                log.Error($"Parametr {nameof(data)} expected length: 8 characters, current: {data.Length}");
-                return null;
+                data = data.Reverse().ToArray();
             }
-
-            return "FFD400" + blockNumber.ToString("X2") + "04" + data;
+            string value = BitConverter.ToString(data).Replace("-", "");
+            return "FFD400" + blockNumber.ToString("X2") + "04" + value;
         }
     }
 
     public class DecrementCommand
     {
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-        public string GetApdu(byte blockNumber, string data)
+        public string GetApdu(byte blockNumber, int incrementValue)
         {
-            data = data.Replace(" ", "").Replace("-", "");
-            if (data.Length != 8)
+            var data = BitConverter.GetBytes(incrementValue);
+            if (!BitConverter.IsLittleEndian)
             {
-                log.Error($"Parametr {nameof(data)} expected length: 8 characters, current: {data.Length}");
-                return null;
+                data = data.Reverse().ToArray();
             }
+            string value = BitConverter.ToString(data).Replace("-", "");
+            return "FFD800" + blockNumber.ToString("X2") + "04" + value;
+        }
+    }
 
-            return "FFD800" + blockNumber.ToString("X2") + "04" + data;
+    public class IncrementDecrementCommand
+    {
+        public enum OperationType : byte
+        {
+            Increment,
+            Decrement
+        };
+        public string GetApdu(OperationType operation, byte blockNumber, int value)
+        {
+            var operationTag = string.Empty;
+            switch (operation)
+            {
+                case OperationType.Increment:
+                    operationTag = "A0";
+                    break;
+                case OperationType.Decrement:
+                    operationTag = "A1";
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(operation), operation, null);
+            }
+            var data = BitConverter.GetBytes(value);
+            if (!BitConverter.IsLittleEndian)
+            {
+                data = data.Reverse().ToArray();
+            }
+            string valueData = BitConverter.ToString(data).Replace("-", "");
+            return "FFC200030B" + operationTag + "098001" + blockNumber.ToString("X2") + "8104" + valueData;
         }
     }
 }

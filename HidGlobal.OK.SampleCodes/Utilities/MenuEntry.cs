@@ -86,7 +86,7 @@ namespace HidGlobal.OK.SampleCodes.Utilities
         {
             try
             {
-                if (entryType.Equals(typeof(Action)))
+                if (entryType == typeof(Action))
                 {
                     EntryAction.Invoke();
                     if (ExitAction != null)

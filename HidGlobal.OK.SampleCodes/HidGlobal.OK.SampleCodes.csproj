@@ -53,7 +53,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AViatoR\ContactCardCommunicationSample.cs" />
-    <Compile Include="AViatoR\ContactlessCardCommunicationSample.cs" />
+    <Compile Include="AViatoR\GetDataExample.cs" />
+    <Compile Include="AViatoR\ExampleWithiClass.cs" />
+    <Compile Include="AViatoR\ExampleWithIso15693.cs" />
+    <Compile Include="AViatoR\ExampleWithMifareClassic.cs" />
+    <Compile Include="AViatoR\Ok5023Samples.cs" />
+    <Compile Include="AViatoR\Ok5122Samples.cs" />
     <Compile Include="AViatoR\ReaderContactlessSlotConfigurationSample.cs" />
     <Compile Include="AViatoR\ReaderContactSlotConfigurationSample.cs" />
     <Compile Include="AViatoR\Ok5022Samples.cs" />
@@ -61,10 +66,13 @@
     <Compile Include="AViatoR\ReaderCapabilitiesSample.cs" />
     <Compile Include="AViatoR\ReaderConfigurationControlSample.cs" />
     <Compile Include="AViatoR\ReaderEepromSample.cs" />
+    <Compile Include="AViatoR\SEProcessorSample.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="Utilities\ConsoleWriter.cs" />
     <Compile Include="Utilities\Menu.cs" />
     <Compile Include="Utilities\MenuEntry.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utilities\ReaderHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config">

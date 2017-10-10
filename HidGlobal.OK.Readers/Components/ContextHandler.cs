@@ -49,6 +49,8 @@ namespace HidGlobal.OK.Readers.Components
             _contextHandle = IntPtr.Zero;
             _hasContext = false;
             Encoding = System.Text.Encoding.ASCII;
+
+            _previousScope = Scope.System;
         }
 
         /// <summary>
@@ -113,7 +115,7 @@ namespace HidGlobal.OK.Readers.Components
         /// <returns><see cref="ErrorCodes"/></returns>
         public ErrorCodes CheckValidity()
         {
-            return WinSCard.IsValidContext(Handle);
+            return WinSCard.IsValidContext(_contextHandle);
         }
         /// <summary>
         /// Lists readers within given reader groups.
@@ -122,9 +124,6 @@ namespace HidGlobal.OK.Readers.Components
         /// <returns>String array with names of active readers.</returns>
         public string[] ListReaders(string[] readerGroups)
         {
-            if (!IsValid())
-                ReEstablish();
-
             var names = new string[0];
             var retCode = WinSCard.ListReaders(Handle, readerGroups, Encoding, out names);
             if (retCode != ErrorCodes.SCARD_S_SUCCESS)
@@ -146,9 +145,6 @@ namespace HidGlobal.OK.Readers.Components
         /// <returns>String array with names of available reader groups.</returns>
         public string[] ListReaderGroups()
         {
-            if (!IsValid())
-                ReEstablish();
-
             var groups = new string[0];
             var retCode = WinSCard.ListReaderGroups(Handle, Encoding, out groups);
             if (retCode != ErrorCodes.SCARD_S_SUCCESS)
@@ -163,9 +159,6 @@ namespace HidGlobal.OK.Readers.Components
         /// <returns><see cref="ErrorCodes"/></returns>
         public ErrorCodes IntroduceReaderGroup(string groupName)
         {
-            if (!IsValid())
-                ReEstablish();
-            
             return WinSCard.IntroduceReaderGroup(Handle, groupName, Encoding);
         }
         /// <summary>
@@ -175,9 +168,6 @@ namespace HidGlobal.OK.Readers.Components
         /// <returns><see cref="ErrorCodes"/></returns>
         public ErrorCodes ForgetReaderGroup(string groupName)
         {
-            if (!IsValid())
-                ReEstablish();
-
             return WinSCard.ForgetReaderGroup(Handle, groupName, Encoding);
         }
         /// <summary>
@@ -188,9 +178,6 @@ namespace HidGlobal.OK.Readers.Components
         /// <returns><see cref="ErrorCodes"/></returns>
         public ErrorCodes AddReaderToGroup(string readerName, string groupName)
         {
-            if (!IsValid())
-                ReEstablish();
-
             return WinSCard.AddReaderToGroup(Handle, readerName, groupName, Encoding);
         }
         /// <summary>
@@ -201,9 +188,6 @@ namespace HidGlobal.OK.Readers.Components
         /// <returns><see cref="ErrorCodes"/></returns>
         public ErrorCodes RemoveReaderFromGroup(string readerName, string groupName)
         {
-            if (!IsValid())
-                ReEstablish();
-
             return WinSCard.RemoveReaderFromGroup(Handle, readerName, groupName, Encoding);
         }
         /// <summary>
@@ -212,9 +196,6 @@ namespace HidGlobal.OK.Readers.Components
         /// <returns><see cref="ErrorCodes"/></returns>
         public ErrorCodes Cancel()
         {
-            if (!IsValid())
-                ReEstablish();
-
             return WinSCard.Cancel(Handle);
         }
         /// <summary>
@@ -225,9 +206,6 @@ namespace HidGlobal.OK.Readers.Components
         /// <returns><see cref="ErrorCodes"/></returns>
         public ErrorCodes IntroduceReader(string readerName, string deviceName)
         {
-            if (!IsValid())
-                ReEstablish();
-
             return WinSCard.IntroduceReader(Handle, readerName, deviceName, Encoding);
         }
         /// <summary>
@@ -237,9 +215,6 @@ namespace HidGlobal.OK.Readers.Components
         /// <returns><see cref="ErrorCodes"/></returns>
         public ErrorCodes ForgetReader(string readerName)
         {
-            if (!IsValid())
-                ReEstablish();
-
             return WinSCard.ForgetReader(Handle, readerName, Encoding);
         }
         /// <summary>
@@ -250,9 +225,6 @@ namespace HidGlobal.OK.Readers.Components
         /// <returns><see cref="ErrorCodes"/></returns>
         public ErrorCodes GetStatusChange(int timeout, ref ReaderState[] readerStates)
         {
-            if (!IsValid())
-                ReEstablish();
-
             return WinSCard.GetStatusChange(Handle, timeout, ref readerStates, readerStates.Length);
         }
         /// <summary>
@@ -285,10 +257,22 @@ namespace HidGlobal.OK.Readers.Components
         {
             return GetReaderState(new string[] {reader})[0];
         }
+
         /// <summary>
         /// Retrives the context handle.
         /// </summary>
-        public IntPtr Handle { get { return _contextHandle; } }
+        public IntPtr Handle
+        {
+            get
+            {
+                if (!IsValid())
+                {
+                    ReEstablish();
+                }
+
+                return _contextHandle;
+            }
+        }
 
         #region IDisposable Support
         private bool disposedValue = false; 

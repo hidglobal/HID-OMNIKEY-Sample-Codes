@@ -20,344 +20,931 @@
            THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *****************************************************************************************/
 using System;
-using System.Linq;
 using HidGlobal.OK.Readers;
 using HidGlobal.OK.Readers.Components;
+using HidGlobal.OK.SampleCodes.Utilities;
 
 namespace HidGlobal.OK.SampleCodes.AViatoR
 {
-    static class ReaderCapabilitiesSample
+    public class ReaderCapabilitiesSample
     {
-        private static void PrintData(string title, string command, string response, string data)
+        private static void PrintCommand(string name, string input, string output, string[] value)
         {
-            Console.WriteLine("-----------------------------------");
-            Console.WriteLine($"<-- {command}\n--> {response}\n{title}: {data}");
-        }
-        private static void PrintData(string title, string command, string response, string[] data)
-        {
-            if (data == null || data.Length <= 0)
+            ConsoleWriter.Instance.PrintSplitter();
+            ConsoleWriter.Instance.PrintCommand(name, input, output);
+            if (value != null)
             {
-                Console.WriteLine("-----------------------------------");
-                Console.WriteLine($"<-- {command}\n--> {response}\n{title}: n/a");
-            }
-            else if (data.Length == 1)
-                PrintData(title, command, response, data[0]);
-            else
-            {
-                Console.WriteLine("-----------------------------------");
-                Console.WriteLine($"<-- {command}\n--> {response}\n{title}:\n\t{data.ToList().Aggregate((i, j) => i + "\n\t" + j)}");
+                ConsoleWriter.Instance.PrintMessage("Output data:");
+                foreach (var data in value)
+                {
+                    ConsoleWriter.Instance.PrintMessage($"\t{data}");
+                }
             }
         }
-        private static IReader Connect(string readerName)
+        private static void PrintCommand(string name, string input, string output, string value)
         {
-            if (!Program.WinscardContext.IsValid())
-                Program.WinscardContext.Establish(Scope.System);
-
-            var reader = new Reader(Program.WinscardContext.Handle, readerName);
-
-            ReaderState readerState = Program.WinscardContext.GetReaderState(reader.PcscReaderName);
-            if (readerState.AtrLength > 0)
-                reader.Connect(ReaderSharingMode.Shared, Protocol.Any);
-            else
-                reader.ConnectDirect();
-
-            return reader;
-        }
-        public static void ReadTlvVersion(string readerName)
-        {
-            var tlvVersion = new Readers.AViatoR.Components.ReaderCapabilities().TlvVersion;
-
-            IReader reader = Connect(readerName);
-
-            if (!reader.IsConnected)
-                return;
-
-            string command = tlvVersion.GetApdu;
-            string response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
-            PrintData("Tlv Version", command, response, tlvVersion.TranslateResponse(response));
-
-            reader.Disconnect(CardDisposition.Unpower);
+            ConsoleWriter.Instance.PrintSplitter();
+            ConsoleWriter.Instance.PrintCommand(name, input, output);
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                ConsoleWriter.Instance.PrintMessage($"Output data: {value}");
+            }
         }
 
-        public static void ReadDeviceId(string readerName)
+        public class TlvVersion
         {
-            var deviceId = new Readers.AViatoR.Components.ReaderCapabilities().DeviceId;
+            private void ReadTlvVersionCommand(IReader reader)
+            {
+                var tlvVersion = new Readers.AViatoR.Components.TlvVersion();
 
-            IReader reader = Connect(readerName);
+                ConsoleWriter.Instance.PrintMessage("Get Tlv Version");
 
-            if (!reader.IsConnected)
-                return;
+                string input = tlvVersion.GetApdu;
+                string output = ReaderHelper.SendCommand(reader, input);
+                string value = tlvVersion.TranslateResponse(output);
 
-            string command = deviceId.GetApdu;
-            string response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
-            PrintData("Device ID", command, response, deviceId.TranslateResponse(response));
+                PrintCommand(string.Empty, input, output, value);
+            }
+            public void Run(string readerName)
+            {
+                using (var reader = new Reader(Program.WinscardContext.Handle, readerName))
+                {
+                    try
+                    {
+                        ConsoleWriter.Instance.PrintSplitter();
+                        ConsoleWriter.Instance.PrintTask($"Connecting to {reader.PcscReaderName}");
 
-            reader.Disconnect(CardDisposition.Unpower);
+                        ReaderHelper.ConnectToReader(reader);
+
+                        ConsoleWriter.Instance.PrintMessage($"Connected\nConnection Mode: {reader.ConnectionMode}");
+
+                        ReadTlvVersionCommand(reader);
+
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                    catch (Exception e)
+                    {
+                        ConsoleWriter.Instance.PrintError(e.Message);
+                    }
+                    finally
+                    {
+                        if (reader.IsConnected)
+                        {
+                            reader.Disconnect(CardDisposition.Unpower);
+                            ConsoleWriter.Instance.PrintMessage("Reader connection closed");
+                        }
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                }
+            }
+        }
+        public class DeviceId
+        {
+            private void ReadDeviceIdCommand(IReader reader)
+            {
+                var deviceId = new Readers.AViatoR.Components.DeviceId();
+
+                ConsoleWriter.Instance.PrintMessage("Get Device ID");
+
+                string input = deviceId.GetApdu;
+                string output = ReaderHelper.SendCommand(reader, input);
+                string value = deviceId.TranslateResponse(output);
+
+                PrintCommand(string.Empty, input, output, value);
+            }
+            public void Run(string readerName)
+            {
+                using (var reader = new Reader(Program.WinscardContext.Handle, readerName))
+                {
+                    try
+                    {
+                        ConsoleWriter.Instance.PrintSplitter();
+                        ConsoleWriter.Instance.PrintTask($"Connecting to {reader.PcscReaderName}");
+
+                        ReaderHelper.ConnectToReader(reader);
+
+                        ConsoleWriter.Instance.PrintMessage($"Connected\nConnection Mode: {reader.ConnectionMode}");
+
+                        ReadDeviceIdCommand(reader);
+
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                    catch (Exception e)
+                    {
+                        ConsoleWriter.Instance.PrintError(e.Message);
+                    }
+                    finally
+                    {
+                        if (reader.IsConnected)
+                        {
+                            reader.Disconnect(CardDisposition.Unpower);
+                            ConsoleWriter.Instance.PrintMessage("Reader connection closed");
+                        }
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                }
+            }
+        }
+        public class ProductName
+        {
+            private void ReadProductNameCommand(IReader reader)
+            {
+                var productName = new Readers.AViatoR.Components.ProductName();
+
+                ConsoleWriter.Instance.PrintMessage("Get Product Name");
+
+                string input = productName.GetApdu;
+                string output = ReaderHelper.SendCommand(reader, input);
+                string value = productName.TranslateResponse(output);
+
+                PrintCommand(string.Empty, input, output, value);
+            }
+            public void Run(string readerName)
+            {
+                using (var reader = new Reader(Program.WinscardContext.Handle, readerName))
+                {
+                    try
+                    {
+                        ConsoleWriter.Instance.PrintSplitter();
+                        ConsoleWriter.Instance.PrintTask($"Connecting to {reader.PcscReaderName}");
+
+                        ReaderHelper.ConnectToReader(reader);
+
+                        ConsoleWriter.Instance.PrintMessage($"Connected\nConnection Mode: {reader.ConnectionMode}");
+
+                        ReadProductNameCommand(reader);
+
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                    catch (Exception e)
+                    {
+                        ConsoleWriter.Instance.PrintError(e.Message);
+                    }
+                    finally
+                    {
+                        if (reader.IsConnected)
+                        {
+                            reader.Disconnect(CardDisposition.Unpower);
+                            ConsoleWriter.Instance.PrintMessage("Reader connection closed");
+                        }
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                }
+            }
+        }
+        public class ProductPlatform
+        {
+            private void ReadProductPlatformCommand(IReader reader)
+            {
+                var productPlatform = new Readers.AViatoR.Components.ProductPlatform();
+
+                ConsoleWriter.Instance.PrintMessage("Get Product Platform");
+
+                string input = productPlatform.GetApdu;
+                string output = ReaderHelper.SendCommand(reader, input);
+                string value = productPlatform.TranslateResponse(output);
+
+                PrintCommand(string.Empty, input, output, value);
+            }
+            public void Run(string readerName)
+            {
+                using (var reader = new Reader(Program.WinscardContext.Handle, readerName))
+                {
+                    try
+                    {
+                        ConsoleWriter.Instance.PrintSplitter();
+                        ConsoleWriter.Instance.PrintTask($"Connecting to {reader.PcscReaderName}");
+
+                        ReaderHelper.ConnectToReader(reader);
+
+                        ConsoleWriter.Instance.PrintMessage($"Connected\nConnection Mode: {reader.ConnectionMode}");
+
+                        ReadProductPlatformCommand(reader);
+
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                    catch (Exception e)
+                    {
+                        ConsoleWriter.Instance.PrintError(e.Message);
+                    }
+                    finally
+                    {
+                        if (reader.IsConnected)
+                        {
+                            reader.Disconnect(CardDisposition.Unpower);
+                            ConsoleWriter.Instance.PrintMessage("Reader connection closed");
+                        }
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                }
+            }
+        }
+        public class EnabledClFeatures
+        {
+            private void ReadEnabledClFeaturesCommand(IReader reader)
+            {
+                var enabledClFeatures = new Readers.AViatoR.Components.EnabledClFeatures();
+
+                ConsoleWriter.Instance.PrintMessage("Get Enabled CL Features");
+
+                string input = enabledClFeatures.GetApdu;
+                string output = ReaderHelper.SendCommand(reader, input);
+                string[] value = enabledClFeatures.TranslateResponse(output);
+
+                PrintCommand(string.Empty, input, output, value);
+            }
+            public void Run(string readerName)
+            {
+                using (var reader = new Reader(Program.WinscardContext.Handle, readerName))
+                {
+                    try
+                    {
+                        ConsoleWriter.Instance.PrintSplitter();
+                        ConsoleWriter.Instance.PrintTask($"Connecting to {reader.PcscReaderName}");
+
+                        ReaderHelper.ConnectToReader(reader);
+
+                        ConsoleWriter.Instance.PrintMessage($"Connected\nConnection Mode: {reader.ConnectionMode}");
+
+                        ReadEnabledClFeaturesCommand(reader);
+
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                    catch (Exception e)
+                    {
+                        ConsoleWriter.Instance.PrintError(e.Message);
+                    }
+                    finally
+                    {
+                        if (reader.IsConnected)
+                        {
+                            reader.Disconnect(CardDisposition.Unpower);
+                            ConsoleWriter.Instance.PrintMessage("Reader connection closed");
+                        }
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                }
+            }
+        }
+        public class FirmwareVersion
+        {
+            private void ReadFirmwareVersionCommand(IReader reader)
+            {
+                var firmwareVersion = new Readers.AViatoR.Components.FirmwareVersion();
+
+                ConsoleWriter.Instance.PrintMessage("Get Firmware Version");
+
+                string input = firmwareVersion.GetApdu;
+                string output = ReaderHelper.SendCommand(reader, input);
+                string value = firmwareVersion.TranslateResponse(output);
+
+                PrintCommand(string.Empty, input, output, value);
+            }
+            public void Run(string readerName)
+            {
+                using (var reader = new Reader(Program.WinscardContext.Handle, readerName))
+                {
+                    try
+                    {
+                        ConsoleWriter.Instance.PrintSplitter();
+                        ConsoleWriter.Instance.PrintTask($"Connecting to {reader.PcscReaderName}");
+
+                        ReaderHelper.ConnectToReader(reader);
+
+                        ConsoleWriter.Instance.PrintMessage($"Connected\nConnection Mode: {reader.ConnectionMode}");
+
+                        ReadFirmwareVersionCommand(reader);
+
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                    catch (Exception e)
+                    {
+                        ConsoleWriter.Instance.PrintError(e.Message);
+                    }
+                    finally
+                    {
+                        if (reader.IsConnected)
+                        {
+                            reader.Disconnect(CardDisposition.Unpower);
+                            ConsoleWriter.Instance.PrintMessage("Reader connection closed");
+                        }
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                }
+            }
+        }
+        public class HfControllerVersion
+        {
+            private void ReadHfControllerVersionCommand(IReader reader)
+            {
+                var hfControllerVersion = new Readers.AViatoR.Components.HfControllerVersion();
+
+                ConsoleWriter.Instance.PrintMessage("Get HF Controller Version");
+
+                string input = hfControllerVersion.GetApdu;
+                string output = ReaderHelper.SendCommand(reader, input);
+                string value = hfControllerVersion.TranslateResponse(output);
+
+                PrintCommand(string.Empty, input, output, value);
+            }
+            public void Run(string readerName)
+            {
+                using (var reader = new Reader(Program.WinscardContext.Handle, readerName))
+                {
+                    try
+                    {
+                        ConsoleWriter.Instance.PrintSplitter();
+                        ConsoleWriter.Instance.PrintTask($"Connecting to {reader.PcscReaderName}");
+
+                        ReaderHelper.ConnectToReader(reader);
+
+                        ConsoleWriter.Instance.PrintMessage($"Connected\nConnection Mode: {reader.ConnectionMode}");
+
+                        ReadHfControllerVersionCommand(reader);
+
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                    catch (Exception e)
+                    {
+                        ConsoleWriter.Instance.PrintError(e.Message);
+                    }
+                    finally
+                    {
+                        if (reader.IsConnected)
+                        {
+                            reader.Disconnect(CardDisposition.Unpower);
+                            ConsoleWriter.Instance.PrintMessage("Reader connection closed");
+                        }
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                }
+            }
+        }
+        public class HardwareVersion
+        {
+            private void ReadHardwareVersionCommand(IReader reader)
+            {
+                var hardwareVersion = new Readers.AViatoR.Components.HardwareVersion();
+
+                ConsoleWriter.Instance.PrintMessage("Get Hardware Version");
+
+                string input = hardwareVersion.GetApdu;
+                string output = ReaderHelper.SendCommand(reader, input);
+                string value = hardwareVersion.TranslateResponse(output);
+
+                PrintCommand(string.Empty, input, output, value);
+            }
+            public void Run(string readerName)
+            {
+                using (var reader = new Reader(Program.WinscardContext.Handle, readerName))
+                {
+                    try
+                    {
+                        ConsoleWriter.Instance.PrintSplitter();
+                        ConsoleWriter.Instance.PrintTask($"Connecting to {reader.PcscReaderName}");
+
+                        ReaderHelper.ConnectToReader(reader);
+
+                        ConsoleWriter.Instance.PrintMessage($"Connected\nConnection Mode: {reader.ConnectionMode}");
+
+                        ReadHardwareVersionCommand(reader);
+
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                    catch (Exception e)
+                    {
+                        ConsoleWriter.Instance.PrintError(e.Message);
+                    }
+                    finally
+                    {
+                        if (reader.IsConnected)
+                        {
+                            reader.Disconnect(CardDisposition.Unpower);
+                            ConsoleWriter.Instance.PrintMessage("Reader connection closed");
+                        }
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                }
+            }
+        }
+        public class HostInterfaces
+        {
+            private void ReadHostInterfacesCommand(IReader reader)
+            {
+                var hostInterfaces = new Readers.AViatoR.Components.HostInterfaces();
+
+                ConsoleWriter.Instance.PrintMessage("Get Host Interfaces");
+
+                string input = hostInterfaces.GetApdu;
+                string output = ReaderHelper.SendCommand(reader, input);
+                string[] value = hostInterfaces.TranslateResponse(output);
+
+                PrintCommand(string.Empty, input, output, value);
+            }
+            public void Run(string readerName)
+            {
+                using (var reader = new Reader(Program.WinscardContext.Handle, readerName))
+                {
+                    try
+                    {
+                        ConsoleWriter.Instance.PrintSplitter();
+                        ConsoleWriter.Instance.PrintTask($"Connecting to {reader.PcscReaderName}");
+
+                        ReaderHelper.ConnectToReader(reader);
+
+                        ConsoleWriter.Instance.PrintMessage($"Connected\nConnection Mode: {reader.ConnectionMode}");
+
+                        ReadHostInterfacesCommand(reader);
+
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                    catch (Exception e)
+                    {
+                        ConsoleWriter.Instance.PrintError(e.Message);
+                    }
+                    finally
+                    {
+                        if (reader.IsConnected)
+                        {
+                            reader.Disconnect(CardDisposition.Unpower);
+                            ConsoleWriter.Instance.PrintMessage("Reader connection closed");
+                        }
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                }
+            }
+        }
+        public class NumberOfContactSlots
+        {
+            private void ReadNumberOfContactSlotsCommand(IReader reader)
+            {
+                var numberOfContactSlots = new Readers.AViatoR.Components.NumberOfContactSlots();
+
+                ConsoleWriter.Instance.PrintMessage("Get Number Of Contact Slots");
+
+                string input = numberOfContactSlots.GetApdu;
+                string output = ReaderHelper.SendCommand(reader, input);
+                string value = numberOfContactSlots.TranslateResponse(output);
+
+                PrintCommand(string.Empty, input, output, value);
+            }
+            public void Run(string readerName)
+            {
+                using (var reader = new Reader(Program.WinscardContext.Handle, readerName))
+                {
+                    try
+                    {
+                        ConsoleWriter.Instance.PrintSplitter();
+                        ConsoleWriter.Instance.PrintTask($"Connecting to {reader.PcscReaderName}");
+
+                        ReaderHelper.ConnectToReader(reader);
+
+                        ConsoleWriter.Instance.PrintMessage($"Connected\nConnection Mode: {reader.ConnectionMode}");
+
+                        ReadNumberOfContactSlotsCommand(reader);
+
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                    catch (Exception e)
+                    {
+                        ConsoleWriter.Instance.PrintError(e.Message);
+                    }
+                    finally
+                    {
+                        if (reader.IsConnected)
+                        {
+                            reader.Disconnect(CardDisposition.Unpower);
+                            ConsoleWriter.Instance.PrintMessage("Reader connection closed");
+                        }
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                }
+            }
+        }
+        public class NumberOfContactlessSlots
+        {
+            private void ReadNumberOfContactlessSlotsCommand(IReader reader)
+            {
+                var numberOfContactlessSlots = new Readers.AViatoR.Components.NumberOfContactlessSlots();
+
+                ConsoleWriter.Instance.PrintMessage("Get Number Of Contactless Slots");
+
+                string input = numberOfContactlessSlots.GetApdu;
+                string output = ReaderHelper.SendCommand(reader, input);
+                string value = numberOfContactlessSlots.TranslateResponse(output);
+
+                PrintCommand(string.Empty, input, output, value);
+            }
+            public void Run(string readerName)
+            {
+                using (var reader = new Reader(Program.WinscardContext.Handle, readerName))
+                {
+                    try
+                    {
+                        ConsoleWriter.Instance.PrintSplitter();
+                        ConsoleWriter.Instance.PrintTask($"Connecting to {reader.PcscReaderName}");
+
+                        ReaderHelper.ConnectToReader(reader);
+
+                        ConsoleWriter.Instance.PrintMessage($"Connected\nConnection Mode: {reader.ConnectionMode}");
+
+                        ReadNumberOfContactlessSlotsCommand(reader);
+
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                    catch (Exception e)
+                    {
+                        ConsoleWriter.Instance.PrintError(e.Message);
+                    }
+                    finally
+                    {
+                        if (reader.IsConnected)
+                        {
+                            reader.Disconnect(CardDisposition.Unpower);
+                            ConsoleWriter.Instance.PrintMessage("Reader connection closed");
+                        }
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                }
+            }
+        }
+        public class NumberOfAntennas
+        {
+            private void ReadNumberOfAntennasCommand(IReader reader)
+            {
+                var numberOfAntennas = new Readers.AViatoR.Components.NumberOfAntennas();
+
+                ConsoleWriter.Instance.PrintMessage("Get Number Of Antennas");
+
+                string input = numberOfAntennas.GetApdu;
+                string output = ReaderHelper.SendCommand(reader, input);
+                string value = numberOfAntennas.TranslateResponse(output);
+
+                PrintCommand(string.Empty, input, output, value);
+            }
+            public void Run(string readerName)
+            {
+                using (var reader = new Reader(Program.WinscardContext.Handle, readerName))
+                {
+                    try
+                    {
+                        ConsoleWriter.Instance.PrintSplitter();
+                        ConsoleWriter.Instance.PrintTask($"Connecting to {reader.PcscReaderName}");
+
+                        ReaderHelper.ConnectToReader(reader);
+
+                        ConsoleWriter.Instance.PrintMessage($"Connected\nConnection Mode: {reader.ConnectionMode}");
+
+                        ReadNumberOfAntennasCommand(reader);
+
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                    catch (Exception e)
+                    {
+                        ConsoleWriter.Instance.PrintError(e.Message);
+                    }
+                    finally
+                    {
+                        if (reader.IsConnected)
+                        {
+                            reader.Disconnect(CardDisposition.Unpower);
+                            ConsoleWriter.Instance.PrintMessage("Reader connection closed");
+                        }
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                }
+            }
+        }
+        public class VendorName
+        {
+            private void ReadVendorNameCommand(IReader reader)
+            {
+                var vendorName = new Readers.AViatoR.Components.VendorName();
+
+                ConsoleWriter.Instance.PrintMessage("Get Vendor Name");
+
+                string input = vendorName.GetApdu;
+                string output = ReaderHelper.SendCommand(reader, input);
+                string value = vendorName.TranslateResponse(output);
+
+                PrintCommand(string.Empty, input, output, value);
+            }
+            public void Run(string readerName)
+            {
+                using (var reader = new Reader(Program.WinscardContext.Handle, readerName))
+                {
+                    try
+                    {
+                        ConsoleWriter.Instance.PrintSplitter();
+                        ConsoleWriter.Instance.PrintTask($"Connecting to {reader.PcscReaderName}");
+
+                        ReaderHelper.ConnectToReader(reader);
+
+                        ConsoleWriter.Instance.PrintMessage($"Connected\nConnection Mode: {reader.ConnectionMode}");
+
+                        ReadVendorNameCommand(reader);
+
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                    catch (Exception e)
+                    {
+                        ConsoleWriter.Instance.PrintError(e.Message);
+                    }
+                    finally
+                    {
+                        if (reader.IsConnected)
+                        {
+                            reader.Disconnect(CardDisposition.Unpower);
+                            ConsoleWriter.Instance.PrintMessage("Reader connection closed");
+                        }
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                }
+            }
+        }
+        public class ExchangeLevel
+        {
+            private void ReadExchangeLevelCommand(IReader reader)
+            {
+                var exchangeLevel = new Readers.AViatoR.Components.ExchangeLevel();
+
+                ConsoleWriter.Instance.PrintMessage("Get Exchange Level");
+
+                string input = exchangeLevel.GetApdu;
+                string output = ReaderHelper.SendCommand(reader, input);
+                string value = exchangeLevel.TranslateResponse(output);
+
+                PrintCommand(string.Empty, input, output, value);
+            }
+            public void Run(string readerName)
+            {
+                using (var reader = new Reader(Program.WinscardContext.Handle, readerName))
+                {
+                    try
+                    {
+                        ConsoleWriter.Instance.PrintSplitter();
+                        ConsoleWriter.Instance.PrintTask($"Connecting to {reader.PcscReaderName}");
+
+                        ReaderHelper.ConnectToReader(reader);
+
+                        ConsoleWriter.Instance.PrintMessage($"Connected\nConnection Mode: {reader.ConnectionMode}");
+
+                        ReadExchangeLevelCommand(reader);
+
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                    catch (Exception e)
+                    {
+                        ConsoleWriter.Instance.PrintError(e.Message);
+                    }
+                    finally
+                    {
+                        if (reader.IsConnected)
+                        {
+                            reader.Disconnect(CardDisposition.Unpower);
+                            ConsoleWriter.Instance.PrintMessage("Reader connection closed");
+                        }
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                }
+            }
+        }
+        public class SerialNumber
+        {
+            private void ReadSerialnumberCommand(IReader reader)
+            {
+                var serialNumber = new Readers.AViatoR.Components.SerialNumber();
+
+                ConsoleWriter.Instance.PrintMessage("Get Serial Number");
+
+                string input = serialNumber.GetApdu;
+                string output = ReaderHelper.SendCommand(reader, input);
+                string value = serialNumber.TranslateResponse(output);
+
+                PrintCommand(string.Empty, input, output, value);
+            }
+            public void Run(string readerName)
+            {
+                using (var reader = new Reader(Program.WinscardContext.Handle, readerName))
+                {
+                    try
+                    {
+                        ConsoleWriter.Instance.PrintSplitter();
+                        ConsoleWriter.Instance.PrintTask($"Connecting to {reader.PcscReaderName}");
+
+                        ReaderHelper.ConnectToReader(reader);
+
+                        ConsoleWriter.Instance.PrintMessage($"Connected\nConnection Mode: {reader.ConnectionMode}");
+
+                        ReadSerialnumberCommand(reader);
+
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                    catch (Exception e)
+                    {
+                        ConsoleWriter.Instance.PrintError(e.Message);
+                    }
+                    finally
+                    {
+                        if (reader.IsConnected)
+                        {
+                            reader.Disconnect(CardDisposition.Unpower);
+                            ConsoleWriter.Instance.PrintMessage("Reader connection closed");
+                        }
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                }
+            }
+        }
+        public class HfControllerType
+        {
+            private void ReadHfControllerTypeCommand(IReader reader)
+            {
+                var hfControllerType = new Readers.AViatoR.Components.HfControllerType();
+
+                ConsoleWriter.Instance.PrintMessage("Get HF Controller Type");
+
+                string input = hfControllerType.GetApdu;
+                string output = ReaderHelper.SendCommand(reader, input);
+                string value = hfControllerType.TranslateResponse(output);
+
+                PrintCommand(string.Empty, input, output, value);
+            }
+            public void Run(string readerName)
+            {
+                using (var reader = new Reader(Program.WinscardContext.Handle, readerName))
+                {
+                    try
+                    {
+                        ConsoleWriter.Instance.PrintSplitter();
+                        ConsoleWriter.Instance.PrintTask($"Connecting to {reader.PcscReaderName}");
+
+                        ReaderHelper.ConnectToReader(reader);
+
+                        ConsoleWriter.Instance.PrintMessage($"Connected\nConnection Mode: {reader.ConnectionMode}");
+
+                        ReadHfControllerTypeCommand(reader);
+
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                    catch (Exception e)
+                    {
+                        ConsoleWriter.Instance.PrintError(e.Message);
+                    }
+                    finally
+                    {
+                        if (reader.IsConnected)
+                        {
+                            reader.Disconnect(CardDisposition.Unpower);
+                            ConsoleWriter.Instance.PrintMessage("Reader connection closed");
+                        }
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                }
+            }
+        }
+        public class SizeOfUserEeprom
+        {
+            private void ReadSizeOfUserEepromCommand(IReader reader)
+            {
+                var sizeOfUserEeprom = new Readers.AViatoR.Components.SizeOfUserEEPROM();
+
+                ConsoleWriter.Instance.PrintMessage("Get Size of User EEPROM");
+
+                string input = sizeOfUserEeprom.GetApdu;
+                string output = ReaderHelper.SendCommand(reader, input);
+                string value = sizeOfUserEeprom.TranslateResponse(output);
+
+                PrintCommand(string.Empty, input, output, value);
+            }
+            public void Run(string readerName)
+            {
+                using (var reader = new Reader(Program.WinscardContext.Handle, readerName))
+                {
+                    try
+                    {
+                        ConsoleWriter.Instance.PrintSplitter();
+                        ConsoleWriter.Instance.PrintTask($"Connecting to {reader.PcscReaderName}");
+
+                        ReaderHelper.ConnectToReader(reader);
+
+                        ConsoleWriter.Instance.PrintMessage($"Connected\nConnection Mode: {reader.ConnectionMode}");
+
+                        ReadSizeOfUserEepromCommand(reader);
+
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                    catch (Exception e)
+                    {
+                        ConsoleWriter.Instance.PrintError(e.Message);
+                    }
+                    finally
+                    {
+                        if (reader.IsConnected)
+                        {
+                            reader.Disconnect(CardDisposition.Unpower);
+                            ConsoleWriter.Instance.PrintMessage("Reader connection closed");
+                        }
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                }
+            }
+        }
+        public class FirmwareLabel
+        {
+            private void ReadFirmwareLabelCommand(IReader reader)
+            {
+                var firmwareLabel = new Readers.AViatoR.Components.FirmwareLabel();
+
+                ConsoleWriter.Instance.PrintMessage("Get Firmware Label");
+
+                string input = firmwareLabel.GetApdu;
+                string output = ReaderHelper.SendCommand(reader, input);
+                string value = firmwareLabel.TranslateResponse(output);
+
+                PrintCommand(string.Empty, input, output, value);
+            }
+            public void Run(string readerName)
+            {
+                using (var reader = new Reader(Program.WinscardContext.Handle, readerName))
+                {
+                    try
+                    {
+                        ConsoleWriter.Instance.PrintSplitter();
+                        ConsoleWriter.Instance.PrintTask($"Connecting to {reader.PcscReaderName}");
+
+                        ReaderHelper.ConnectToReader(reader);
+
+                        ConsoleWriter.Instance.PrintMessage($"Connected\nConnection Mode: {reader.ConnectionMode}");
+
+                        ReadFirmwareLabelCommand(reader);
+
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                    catch (Exception e)
+                    {
+                        ConsoleWriter.Instance.PrintError(e.Message);
+                    }
+                    finally
+                    {
+                        if (reader.IsConnected)
+                        {
+                            reader.Disconnect(CardDisposition.Unpower);
+                            ConsoleWriter.Instance.PrintMessage("Reader connection closed");
+                        }
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                }
+            }
+        }
+        public class HumanInterfaces
+        {
+            private void ReadHumanInterfacesCommand(IReader reader)
+            {
+                var humanInterfaces = new Readers.AViatoR.Components.HumanInterfaces();
+
+                ConsoleWriter.Instance.PrintMessage("Get Human Interfaces");
+
+                string input = humanInterfaces.GetApdu;
+                string output = ReaderHelper.SendCommand(reader, input);
+                string[] value = humanInterfaces.TranslateResponse(output);
+
+                PrintCommand(string.Empty, input, output, value);
+            }
+            public void Run(string readerName)
+            {
+                using (var reader = new Reader(Program.WinscardContext.Handle, readerName))
+                {
+                    try
+                    {
+                        ConsoleWriter.Instance.PrintSplitter();
+                        ConsoleWriter.Instance.PrintTask($"Connecting to {reader.PcscReaderName}");
+
+                        ReaderHelper.ConnectToReader(reader);
+
+                        ConsoleWriter.Instance.PrintMessage($"Connected\nConnection Mode: {reader.ConnectionMode}");
+
+                        ReadHumanInterfacesCommand(reader);
+
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                    catch (Exception e)
+                    {
+                        ConsoleWriter.Instance.PrintError(e.Message);
+                    }
+                    finally
+                    {
+                        if (reader.IsConnected)
+                        {
+                            reader.Disconnect(CardDisposition.Unpower);
+                            ConsoleWriter.Instance.PrintMessage("Reader connection closed");
+                        }
+                        ConsoleWriter.Instance.PrintSplitter();
+                    }
+                }
+            }
         }
 
-        public static void ReadProductName(string readerName)
-        {
-            var productName = new Readers.AViatoR.Components.ReaderCapabilities().ProductName;
-
-            IReader reader = Connect(readerName);
-
-            if (!reader.IsConnected)
-                return;
-
-            string command = productName.GetApdu;
-            string response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
-            PrintData("Product Name", command, response, productName.TranslateResponse(response));
-
-            reader.Disconnect(CardDisposition.Unpower);
-        }
-
-        public static void ReadProductPlatform(string readerName)
-        {
-            var productPlatform = new Readers.AViatoR.Components.ReaderCapabilities().ProductPlatform;
-
-            IReader reader = Connect(readerName);
-
-            if (!reader.IsConnected)
-                return;
-
-            string command = productPlatform.GetApdu;
-            string response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
-            PrintData("Product Platform", command, response, productPlatform.TranslateResponse(response));
-
-            reader.Disconnect(CardDisposition.Unpower);
-        }
-        public static void ReadEnabledClFeatures(string readerName)
-        {
-            var enabledClFetures = new Readers.AViatoR.Components.ReaderCapabilities().EnabledClFeatures;
-
-            IReader reader = Connect(readerName);
-
-            if (!reader.IsConnected)
-                return;
-
-            string command = enabledClFetures.GetApdu;
-            string response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
-            PrintData("Enabled CL Features", command, response, enabledClFetures.TranslateResponse(response));
-
-            reader.Disconnect(CardDisposition.Unpower);
-        }
-
-        public static void ReadFirmwareVersion(string readerName)
-        {
-            var firmwareVersion = new Readers.AViatoR.Components.ReaderCapabilities().FirmwareVersion;
-
-            IReader reader = Connect(readerName);
-
-            if (!reader.IsConnected)
-                return;
-
-            string command = firmwareVersion.GetApdu;
-            string response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
-            PrintData("Firmware Version", command, response, firmwareVersion.TranslateResponse(response));
-
-            reader.Disconnect(CardDisposition.Unpower);
-        }
-        public static void ReadHfControllerVersion(string readerName)
-        {
-            var hfControllerVersion = new Readers.AViatoR.Components.ReaderCapabilities().HfControllerVersion;
-
-            IReader reader = Connect(readerName);
-
-            if (!reader.IsConnected)
-                return;
-
-            string command = hfControllerVersion.GetApdu;
-            string response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
-            PrintData("HF Controller Version", command, response, hfControllerVersion.TranslateResponse(response));
-
-            reader.Disconnect(CardDisposition.Unpower);
-        }
-        public static void ReadHardwareVersion(string readerName)
-        {
-            var hardwareVersion = new Readers.AViatoR.Components.ReaderCapabilities().HardwareVersion;
-
-            IReader reader = Connect(readerName);
-
-            if (!reader.IsConnected)
-                return;
-
-            string command = hardwareVersion.GetApdu;
-            string response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
-            PrintData("Hardware Version", command, response, hardwareVersion.TranslateResponse(response));
-
-            reader.Disconnect(CardDisposition.Unpower);
-        }
-        public static void ReadHostInterfaces(string readerName)
-        {
-            var hostInterfaces = new Readers.AViatoR.Components.ReaderCapabilities().HostInterfaces;
-
-            IReader reader = Connect(readerName);
-
-            if (!reader.IsConnected)
-                return;
-
-            string command = hostInterfaces.GetApdu;
-            string response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
-            PrintData("Host Interfaces", command, response, hostInterfaces.TranslateResponse(response));
-
-            reader.Disconnect(CardDisposition.Unpower);
-        }
-
-        public static void ReadNumberOfContactSlots(string readerName)
-        {
-            var numberOfContactSlots = new Readers.AViatoR.Components.ReaderCapabilities().NumberOfContactSlots;
-
-            IReader reader = Connect(readerName);
-
-            if (!reader.IsConnected)
-                return;
-
-            string command = numberOfContactSlots.GetApdu;
-            string response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
-            PrintData("Number of Contact Slots", command, response, numberOfContactSlots.TranslateResponse(response));
-
-            reader.Disconnect(CardDisposition.Unpower);
-        }
-
-        public static void ReadNumberOfContactlessSlots(string readerName)
-        {
-            var numberOfContactlessSlots = new Readers.AViatoR.Components.ReaderCapabilities().NumberOfContactlessSlots;
-
-            IReader reader = Connect(readerName);
-
-            if (!reader.IsConnected)
-                return;
-
-            string command = numberOfContactlessSlots.GetApdu;
-            string response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
-            PrintData("Number of Contactless Slots", command, response, numberOfContactlessSlots.TranslateResponse(response));
-
-            reader.Disconnect(CardDisposition.Unpower);
-        }
-        public static void ReadNumberOfAntennas(string readerName)
-        {
-            var numberOfAntennas = new Readers.AViatoR.Components.ReaderCapabilities().NumberOfAntennas;
-
-            IReader reader = Connect(readerName);
-
-            if (!reader.IsConnected)
-                return;
-
-            string command = numberOfAntennas.GetApdu;
-            string response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
-            PrintData("Number of Antennas", command, response, numberOfAntennas.TranslateResponse(response));
-
-            reader.Disconnect(CardDisposition.Unpower);
-        }
-
-        public static void ReadHumanInterfaces(string readerName)
-        {
-            var humanInterfaces = new Readers.AViatoR.Components.ReaderCapabilities().HumanInterfaces;
-
-            IReader reader = Connect(readerName);
-
-            if (!reader.IsConnected)
-                return;
-
-            string command = humanInterfaces.GetApdu;
-            string response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
-            PrintData("Human Interfaces", command, response, humanInterfaces.TranslateResponse(response));
-
-            reader.Disconnect(CardDisposition.Unpower);
-        }
-        public static void ReadVendorName(string readerName)
-        {
-            var vendorName = new Readers.AViatoR.Components.ReaderCapabilities().VendorName;
-
-            IReader reader = Connect(readerName);
-
-            if (!reader.IsConnected)
-                return;
-
-            string command = vendorName.GetApdu;
-            string response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
-            PrintData("Vendor Name", command, response, vendorName.TranslateResponse(response));
-
-            reader.Disconnect(CardDisposition.Unpower);
-        }
-        public static void ReadExchangeLevel(string readerName)
-        {
-            var exchangeLevel = new Readers.AViatoR.Components.ReaderCapabilities().ExchangeLevel;
-
-            IReader reader = Connect(readerName);
-
-            if (!reader.IsConnected)
-                return;
-
-            string command = exchangeLevel.GetApdu;
-            string response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
-            PrintData("Exchange Level", command, response, exchangeLevel.TranslateResponse(response));
-
-            reader.Disconnect(CardDisposition.Unpower);
-        }
-        public static void ReadSerialNumber(string readerName)
-        {
-            var serialNumber = new Readers.AViatoR.Components.ReaderCapabilities().SerialNumber;
-
-            IReader reader = Connect(readerName);
-
-            if (!reader.IsConnected)
-                return;
-
-            string command = serialNumber.GetApdu;
-            string response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
-            PrintData("Serial Number", command, response, serialNumber.TranslateResponse(response));
-
-            reader.Disconnect(CardDisposition.Unpower);
-        }
-
-        public static void ReadHfControllerType(string readerName)
-        {
-            var hfControllerType = new Readers.AViatoR.Components.ReaderCapabilities().HfControllerType;
-
-            IReader reader = Connect(readerName);
-
-            if (!reader.IsConnected)
-                return;
-
-            string command = hfControllerType.GetApdu;
-            string response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
-            PrintData("HF Controller Type", command, response, hfControllerType.TranslateResponse(response));
-
-            reader.Disconnect(CardDisposition.Unpower);
-        }
-
-        public static void ReadSizeOfUserEeprom(string readerName)
-        {
-            var sizeOfUserEeprom = new Readers.AViatoR.Components.ReaderCapabilities().SizeOfUserEEPROM;
-
-            IReader reader = Connect(readerName);
-
-            if (!reader.IsConnected)
-                return;
-
-            string command = sizeOfUserEeprom.GetApdu;
-            string response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
-            PrintData("Size of User EEPROM", command, response, sizeOfUserEeprom.TranslateResponse(response));
-
-            reader.Disconnect(CardDisposition.Unpower);
-        }
-
-        public static void ReadFirmwareLabel(string readerName)
-        {
-            var firmwareLabel = new Readers.AViatoR.Components.ReaderCapabilities().FirmwareLabel;
-
-            IReader reader = Connect(readerName);
-
-            if (!reader.IsConnected)
-                return;
-
-            string command = firmwareLabel.GetApdu;
-            string response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
-            PrintData("Firmware Label", command, response, firmwareLabel.TranslateResponse(response));
-
-            reader.Disconnect(CardDisposition.Unpower);
-        }
     }
 }
 
