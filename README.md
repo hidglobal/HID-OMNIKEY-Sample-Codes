@@ -66,7 +66,7 @@ Sample codes are written in C# and developed for Windows.
         * 2WBP
         * 3WBP
         * I2C
-* OMNIKEY 5022
+* OMNIKEY 5023
     * Configuration
        * Read
        * Write
