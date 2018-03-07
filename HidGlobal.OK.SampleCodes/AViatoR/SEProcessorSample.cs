@@ -40,6 +40,42 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
 
             protected abstract void ExecuteExample(SamSecureSession session);
 
+            protected virtual void ExecuteExample(Reader reader)
+            {
+                ConsoleWriter.Instance.PrintMessage("Example without secure session is not available");
+            }
+
+            public void RunWithoutSecureSession()
+            {
+                try
+                {
+                    ConsoleWriter.Instance.PrintSplitter();
+                    ConsoleWriter.Instance.PrintTask("Establishing connection with a card");
+
+                    using (var reader = new Reader(Program.WinscardContext.Handle, _readerName))
+                    {
+                        reader.Connect(ReaderSharingMode.Shared, Protocol.Any);
+
+                        if (reader.IsConnected)
+                        {
+                            ConsoleWriter.Instance.PrintMessage("Connection with a card established");
+
+                            ExecuteExample(reader);
+
+                            ConsoleWriter.Instance.PrintSplitter();
+                        }
+                        else
+                        {
+                            ConsoleWriter.Instance.PrintError("Failed to establish connection with a card");
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    ConsoleWriter.Instance.PrintError("Exception's been thrown: message = " + e.Message);
+                }
+            }
+
             public void Run()
             {
                 try
@@ -246,6 +282,23 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
             protected override void ExecuteExample(SamSecureSession session)
             {
                 SendReadPACSDataCommand(session);
+            }
+
+            protected override void ExecuteExample(Reader reader)
+            {
+                SendReadPACSDataCommand(reader);
+            }
+
+            private void SendReadPACSDataCommand(Reader reader)
+            {
+                var command = new SEPReadPACSData();
+
+                var input = command.GetApdu();
+                var output = reader.Transmit(input);
+                var response = command.TranslateResponse(output);
+
+                PrintCommand("Read PACS Data", input, output, response);
+                PrintDetailedResponse(response);
             }
 
             private void SendReadPACSDataCommand(SamSecureSession session)

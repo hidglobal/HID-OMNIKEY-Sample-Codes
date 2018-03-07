@@ -145,6 +145,7 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
                 new MenuEntry("Load key to PCSC containter Example", () => new SEProcessorSample.LoadKeyToPcScContainer().Run(_readerName), WaitKeyPress),
                 new MenuEntry("Load Key to SE processor Example", () => new SEProcessorSample.LoadKeyExample(_readerName).Run(), WaitKeyPress),
                 new MenuEntry("Read PACS Data Example", () => new SEProcessorSample.ReadPACSDataExample(_readerName).Run(), WaitKeyPress),
+                new MenuEntry("Read PACS Data without secure session Example", () => new SEProcessorSample.ReadPACSDataExample(_readerName).RunWithoutSecureSession(), WaitKeyPress),
                 new MenuEntry("Desfire Examples", desfireExamples),
             };
             

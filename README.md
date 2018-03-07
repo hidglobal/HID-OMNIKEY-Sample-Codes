@@ -94,6 +94,7 @@ Sample codes are written in C# and developed for Windows.
 * Added support for OMNIKEY 5023 reader
 * Added support for OMNIKEY 5122 reader
 * Refactored secure session examples
+* Added read PACS data without secure session example for OMNIKEY 5023 reader
 
 ## Prerequisites
 
