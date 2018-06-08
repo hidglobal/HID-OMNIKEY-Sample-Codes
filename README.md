@@ -10,6 +10,7 @@ Sample codes are written in C# and developed for Windows.
 
 * OMNIKEY 5022
 * OMNIKEY 5023
+* OMNIKEY 5027
 * OMNIKEY 5122
 * OMNIKEY 5422
 
@@ -41,6 +42,36 @@ Sample codes are written in C# and developed for Windows.
     * ISO 15693
        * Read one block
        * Update one block
+* OMNIKEY 5023
+    * Configuration
+       * Read
+       * Write
+       * Display
+    * User EEPROM
+       * Read
+       * Write
+    * ISO/IEC 14443 Type A
+       * MIFARE Classic 1K/4K Example
+           * Read one block
+           * Write one block
+           * Increment value type block
+           * Decrement value type block
+           * Load key example
+    * iClass 2ks/16k example with secure session (requires keys)
+       * Load key example
+       * Read Binary
+       * Update Binary
+    * Secure Processor Examples
+	   * Read PACS data
+	   * Desfire example 
+* OMNIKEY 5027
+    * Configuration
+       * Read
+       * Write
+       * Display
+    * User EEPROM
+       * Read
+       * Write
 * OMNIKEY 5422 / 5122
     * Configuration
         * Read
@@ -66,35 +97,14 @@ Sample codes are written in C# and developed for Windows.
         * 2WBP
         * 3WBP
         * I2C
-* OMNIKEY 5023
-    * Configuration
-       * Read
-       * Write
-       * Display
-    * User EEPROM
-       * Read
-       * Write
-    * ISO/IEC 14443 Type A
-       * MIFARE Classic 1K/4K Example
-           * Read one block
-           * Write one block
-           * Increment value type block
-           * Decrement value type block
-           * Load key example
-    * iClass 2ks/16k example with secure session (requires keys)
-       * Load key example
-       * Read Binary
-       * Update Binary
-    * Secure Processor Examples
-	   * Read PACS data
-	   * Desfire example 
 
 ## Release Notes
-
-* Added support for OMNIKEY 5023 reader
-* Added support for OMNIKEY 5122 reader
-* Refactored secure session examples
-* Added read PACS data without secure session example for OMNIKEY 5023 reader
+* v1.6.0
+	* Added support for OMNIKEY 5027 reader
+* v1.5.0
+	* Added support for OMNIKEY 5023 reader
+	* Added support for OMNIKEY 5122 reader
+	* Refactored secure session examples
 
 ## Prerequisites
 
@@ -108,7 +118,7 @@ file attached to the samples in the "documentation" folder.
 
 ## License
 
-(c) 2017 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
+(c) 2017-2018 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
 
       Redistribution and use in source and binary forms, with or without modification,
       are permitted provided that the following conditions are met:

@@ -1,5 +1,5 @@
 ﻿/*****************************************************************************************
-    (c) 2017 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
+    (c) 2017-2018 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
 
       Redistribution and use in source and binary forms, with or without modification,
       are permitted provided that the following conditions are met:
@@ -20,6 +20,7 @@
            THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *****************************************************************************************/
 using System;
+using System.Text.RegularExpressions;
 using HidGlobal.OK.Readers;
 using HidGlobal.OK.Readers.AViatoR.Components;
 using HidGlobal.OK.Readers.Components;
@@ -30,11 +31,33 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
 {
     public class ExampleWithiClass
     {
+        private static bool IsValidSessionKeyFormat(string sessionKey)
+        {
+            var sessionKeyPattern = new Regex("\\A[0-9A-Fa-f]{32}\\z", RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(500));
+
+            if (string.IsNullOrWhiteSpace(sessionKey))
+                return false;
+
+            if (!sessionKeyPattern.IsMatch(sessionKey))
+                return false;
+
+            return true;
+        }
+
         public class LoadKeyToPcScContainerExample
         {
-            private const byte AdminAccess = (byte)SessionAccessKeyType.UserAdminCipherKey;
-            private const string EncKey = "00000000000000000000000000000000"; // admin access encryption key, following key needs to be replaced with real one
-            private const string MacKey = "00000000000000000000000000000000"; // admin access mac key, following key needs to be replaced with real one
+            private const byte KeyRelatedAccessRight = (byte)SessionAccessKeyType.UserAdminCipherKey;
+
+            /// <summary>
+            /// Admin access encryption key, fill this field with valid 16 byte long key (hexadecimal string without hex specifier).
+            /// Example of correct hexadecimal string key formating "00000000000000000000000000000000".
+            /// </summary>
+            private const string EncKey = "";
+            /// <summary>
+            /// Admin access mac key, fill this field with valid 16 byte long key (hexadecimal string without hex specifier).
+            /// Example of correct hexadecimal string key formating "00000000000000000000000000000000".
+            /// </summary>
+            private const string MacKey = ""; 
             private void LoadKeyCommand(ISecureChannel session, string description, byte keySlot, LoadKeyCommand.KeyType keyType, LoadKeyCommand.Persistence persistence, LoadKeyCommand.Transmission transmission, LoadKeyCommand.KeyLength keyLength, string key)
             {
                 var loadKeyCommand = new Readers.AViatoR.Components.LoadKeyCommand();
@@ -45,14 +68,17 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
             }
             public void Run(string readerName)
             {
-                var reader = new Reader(Program.WinscardContext.Handle, readerName);
+                var reader = new SmartCardReader(readerName);
                 var secureChannel = new Readers.SecureSession.SecureChannel(reader);
                 try
                 {
                     ConsoleWriter.Instance.PrintSplitter();
                     ConsoleWriter.Instance.PrintTask("Establishing SAM Secure Session");
 
-                    secureChannel.Establish(EncKey + MacKey, AdminAccess);
+                    if (!IsValidSessionKeyFormat(EncKey) || !IsValidSessionKeyFormat(MacKey))
+                        throw new ArgumentException("Secure session key format is incorrect, correct format of session key string is 32 character long hexadecimal string without hex specifier. Example: \"00000000000000000000000000000000\"");
+
+                    secureChannel.Establish(EncKey + MacKey, KeyRelatedAccessRight);
 
                     if (secureChannel.IsSessionActive)
                     {
@@ -64,7 +90,6 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
                             Readers.AViatoR.Components.LoadKeyCommand.Persistence.Persistent,
                             Readers.AViatoR.Components.LoadKeyCommand.Transmission.Plain,
                             Readers.AViatoR.Components.LoadKeyCommand.KeyLength._6Bytes, "FFFFFFFFFFFF");
-
 
                         LoadKeyCommand(secureChannel, "Load iCLASS volatile key: ", 0x41,
                             Readers.AViatoR.Components.LoadKeyCommand.KeyType.CardKey,
@@ -126,19 +151,30 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
         }
         public class ReadBinaryiClass16kExample
         {
-            private const byte ReadOnlyAccess = (byte)SessionAccessKeyType.ReadOnlyCipherKey;
-            private const string EncKey = "00000000000000000000000000000000"; // readonly access encryption key, following key needs to be replaced with real one
-            private const string MacKey = "00000000000000000000000000000000"; // readonly access mac key, following key needs to be replaced with real one
+            private const byte KeyRelatedAccessRight = (byte)SessionAccessKeyType.UserAdminCipherKey;
+            /// <summary>
+            /// Admin access encryption key, fill this field with valid 16 byte long key (hexadecimal string without hex specifier).
+            /// Example of correct hexadecimal string key formating "00000000000000000000000000000000".
+            /// </summary>
+            private const string EncKey = "";
+            /// <summary>
+            /// Admin access mac key, fill this field with valid 16 byte long key (hexadecimal string without hex specifier).
+            /// Example of correct hexadecimal string key formating "00000000000000000000000000000000".
+            /// </summary>
+            private const string MacKey = "";
             public void Run(string readerName)
             {
-                var reader = new Reader(Program.WinscardContext.Handle, readerName);
+                var reader = new SmartCardReader(readerName);
                 var secureChannel = new Readers.SecureSession.SecureChannel(reader);
                 try
                 {
                     ConsoleWriter.Instance.PrintSplitter();
                     ConsoleWriter.Instance.PrintTask("Establishing Secure Session");
-                    
-                    secureChannel.Establish(EncKey + MacKey, ReadOnlyAccess);
+
+                    if (!IsValidSessionKeyFormat(EncKey) || !IsValidSessionKeyFormat(MacKey))
+                        throw new ArgumentException("Secure session key format is incorrect, correct format of session key string is 32 character long hexadecimal string without hex specifier. Example: \"00000000000000000000000000000000\"");
+
+                    secureChannel.Establish(EncKey + MacKey, KeyRelatedAccessRight);
 
                     if (secureChannel.IsSessionActive)
                     {
@@ -182,19 +218,30 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
         }
         public class UpdateBinaryiClass16kExample
         {
-            private const byte ReadWriteAccess = (byte)SessionAccessKeyType.ReadWriteCipherKey;
-            private const string EncKey = "00000000000000000000000000000000"; // read/write access encryption key, following key needs to be replaced with real one
-            private const string MacKey = "00000000000000000000000000000000"; // read/write access mac key, following key needs to be replaced with real one
+            private const byte KeyRelatedAccessRight = (byte)SessionAccessKeyType.UserAdminCipherKey;
+            /// <summary>
+            /// Admin access encryption key, fill this field with valid 16 byte long key (hexadecimal string without hex specifier).
+            /// Example of correct hexadecimal string key formating "00000000000000000000000000000000".
+            /// </summary>
+            private const string EncKey = "";
+            /// <summary>
+            /// Admin access mac key, fill this field with valid 16 byte long key (hexadecimal string without hex specifier).
+            /// Example of correct hexadecimal string key formating "00000000000000000000000000000000".
+            /// </summary>
+            private const string MacKey = "";
             public void Run(string readerName)
             {
-                var reader = new Reader(Program.WinscardContext.Handle, readerName);
+                var reader = new SmartCardReader(readerName);
                 var secureChannel = new Readers.SecureSession.SecureChannel(reader);
                 try
                 {
                     ConsoleWriter.Instance.PrintSplitter();
                     ConsoleWriter.Instance.PrintTask("Establishing Secure Session");
 
-                    secureChannel.Establish(EncKey + MacKey, ReadWriteAccess);
+                    if (!IsValidSessionKeyFormat(EncKey) || !IsValidSessionKeyFormat(MacKey))
+                        throw new ArgumentException("Secure session key format is incorrect, correct format of session key string is 32 character long hexadecimal string without hex specifier. Example: \"00000000000000000000000000000000\"");
+
+                    secureChannel.Establish(EncKey + MacKey, KeyRelatedAccessRight);
 
                     if (secureChannel.IsSessionActive)
                     {
@@ -238,19 +285,30 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
         }
         public class ReadBinaryiClass2ksExample
         {
-            private const byte ReadOnlyAccess = (byte)SessionAccessKeyType.ReadOnlyCipherKey;
-            private const string EncKey = "00000000000000000000000000000000"; // readonly access encryption key, following key needs to be replaced with real one
-            private const string MacKey = "00000000000000000000000000000000"; // readonly access mac key, following key needs to be replaced with real one
+            private const byte KeyRelatedAccessRight = (byte)SessionAccessKeyType.UserAdminCipherKey;
+            /// <summary>
+            /// Admin access encryption key, fill this field with valid 16 byte long key (hexadecimal string without hex specifier).
+            /// Example of correct hexadecimal string key formating "00000000000000000000000000000000".
+            /// </summary>
+            private const string EncKey = "";
+            /// <summary>
+            /// Admin access mac key, fill this field with valid 16 byte long key (hexadecimal string without hex specifier).
+            /// Example of correct hexadecimal string key formating "00000000000000000000000000000000".
+            /// </summary>
+            private const string MacKey = "";
             public void Run(string readerName)
             {
-                var reader = new Reader(Program.WinscardContext.Handle, readerName);
+                var reader = new SmartCardReader(readerName);
                 var secureChannel = new Readers.SecureSession.SecureChannel(reader);
                 try
                 {
                     ConsoleWriter.Instance.PrintSplitter();
                     ConsoleWriter.Instance.PrintTask("Establishing Secure Session");
 
-                    secureChannel.Establish(EncKey + MacKey, ReadOnlyAccess);
+                    if (!IsValidSessionKeyFormat(EncKey) || !IsValidSessionKeyFormat(MacKey))
+                        throw new ArgumentException("Secure session key format is incorrect, correct format of session key string is 32 character long hexadecimal string without hex specifier. Example: \"00000000000000000000000000000000\"");
+
+                    secureChannel.Establish(EncKey + MacKey, KeyRelatedAccessRight);
 
                     if (secureChannel.IsSessionActive)
                     {
@@ -294,19 +352,30 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
         }
         public class UpdateBinaryiClass2ksExample
         {
-            private const byte ReadWriteAccess = (byte)SessionAccessKeyType.ReadWriteCipherKey;
-            private const string EncKey = "00000000000000000000000000000000"; // read/write access encryption key, following key needs to be replaced with real one
-            private const string MacKey = "00000000000000000000000000000000"; // read/write access mac key, following key needs to be replaced with real one
+            private const byte KeyRelatedAccesRight = (byte)SessionAccessKeyType.UserAdminCipherKey;
+            /// <summary>
+            /// Admin access encryption key, fill this field with valid 16 byte long key (hexadecimal string without hex specifier).
+            /// Example of correct hexadecimal string key formating "00000000000000000000000000000000".
+            /// </summary>
+            private const string EncKey = "";
+            /// <summary>
+            /// Admin access mac key, fill this field with valid 16 byte long key (hexadecimal string without hex specifier).
+            /// Example of correct hexadecimal string key formating "00000000000000000000000000000000".
+            /// </summary>
+            private const string MacKey = "";
             public void Run(string readerName)
             {
-                var reader = new Reader(Program.WinscardContext.Handle, readerName);
+                var reader = new SmartCardReader(readerName);
                 var secureChannel = new Readers.SecureSession.SecureChannel(reader);
                 try
                 {
                     ConsoleWriter.Instance.PrintSplitter();
                     ConsoleWriter.Instance.PrintTask("Establishing Secure Session");
 
-                    secureChannel.Establish(EncKey + MacKey, ReadWriteAccess);
+                    if (!IsValidSessionKeyFormat(EncKey) || !IsValidSessionKeyFormat(MacKey))
+                        throw new ArgumentException("Secure session key format is incorrect, correct format of session key string is 32 character long hexadecimal string without hex specifier. Example: \"00000000000000000000000000000000\"");
+
+                    secureChannel.Establish(EncKey + MacKey, KeyRelatedAccesRight);
 
                     if (secureChannel.IsSessionActive)
                     {
@@ -352,7 +421,7 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
         {
             public void Run(string readerName)
             {
-                var reader = new Reader(Program.WinscardContext.Handle, readerName);
+                var reader = new SmartCardReader(readerName);
                 
                 try
                 {
@@ -393,7 +462,7 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
         {
             public void Run(string readerName)
             {
-                var reader = new Reader(Program.WinscardContext.Handle, readerName);
+                var reader = new SmartCardReader(readerName);
                 
                 try
                 {
@@ -434,7 +503,7 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
         {
             public void Run(string readerName)
             {
-                var reader = new Reader(Program.WinscardContext.Handle, readerName);
+                var reader = new SmartCardReader(readerName);
                 
                 try
                 {
@@ -475,7 +544,7 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
         {
             public void Run(string readerName)
             {
-                var reader = new Reader(Program.WinscardContext.Handle, readerName);
+                var reader = new SmartCardReader(readerName);
                 
                 try
                 {

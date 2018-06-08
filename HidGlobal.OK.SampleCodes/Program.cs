@@ -1,5 +1,5 @@
 ﻿/*****************************************************************************************
-    (c) 2017 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
+    (c) 2017-2018 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
 
       Redistribution and use in source and binary forms, with or without modification,
       are permitted provided that the following conditions are met:
@@ -20,108 +20,25 @@
            THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *****************************************************************************************/
 
-using System;
-using System.Collections.Generic;
-using HidGlobal.OK.SampleCodes.Utilities;
-using System.Linq;
+using HidGlobal.OK.SampleCodes.MenuSections;
 
 namespace HidGlobal.OK.SampleCodes
 {
     static class Program
     {
-        public static Readers.Components.ContextHandler WinscardContext = new Readers.Components.ContextHandler();
+        private static IMenuItem _rootMenu = new MenuItem("HID OMNIKEY Smart Card Readers' Sample Codes Application Menu", true);
 
-        private static List<string> _activeReaders = new List<string>();
-        private static Menu _mainMenu;
-
-        private static readonly List<string> _supportedReaders = new List<string>(new[]
-        {
-            "HID Global OMNIKEY 5022 Smart Card Reader",
-            "HID Global OMNIKEY 5023 Smart Card Reader",
-            "HID Global OMNIKEY 5122 Smartcard Reader",
-            "HID Global OMNIKEY 5122CL Smartcard Reader",
-            "HID Global OMNIKEY 5422 Smartcard Reader",
-            "HID Global OMNIKEY 5422CL Smartcard Reader",
-        });
+        private static IMenuSection _keyboardWedgesSection = new KeyboardWedgesMenuSection(KeyboardWedgesMenuFactory.Instance);
+        private static IMenuSection _smartCardReadersSection = new SmartCardReadersMenuSection(SmartCardReadersMenuFactory.Instance);
 
         private static int Main(string[] args)
         {
-            WinscardContext.Establish(Readers.Components.Scope.System);
+            _rootMenu.AddSubItem(_smartCardReadersSection.RootMenuItem);
+            _rootMenu.AddSubItem(_keyboardWedgesSection.RootMenuItem);
 
-            using (WinscardContext)
-            {
-                // Create instance of main menu with reader selection
-                CreateMenu();
-                UpdateMenu();
-                _mainMenu.RunMenu();
-            }
+            _rootMenu.Execute();
             
             return 0;
         }
-
-        /// <summary>
-        /// Seeks for supported readers and add them to the dictionary.
-        /// </summary>
-        private static void RefreshReaderList()
-        {
-            _activeReaders.Clear();
-
-            var readerNames = WinscardContext.ListReaders();
-
-            if (readerNames != null)
-            {
-                _activeReaders = readerNames.Where(readerName => _supportedReaders.Any(readerName.Contains)).ToList();
-            }
-            else
-            {
-                ConsoleWriter.Instance.PrintMessage("None of supported readers has been found..");
-                ConsoleWriter.Instance.WaitKeyPress();
-            }
-        }
-
-        private static void CreateMenu()
-        {
-            _mainMenu = new Menu("HID OMNIKEY Smart Card Readers' Sample Codes Application Menu", false)
-            {
-                new MenuEntry("Refresh reader list", new Action(UpdateMenu))
-            };
-        }
-
-        private static void UpdateMenu()
-        {
-            const int menuOffset = 2;
-            // Clears menu options.
-            _mainMenu.RemoveRange(menuOffset, _mainMenu.Count - menuOffset);
-            RefreshReaderList();
-            foreach (var readerName in _activeReaders)
-            {
-                _mainMenu.Add(new MenuEntry(readerName, new Action(() => { RunReaderMenu(readerName); })));
-            }
-        }
-
-        private static void RunReaderMenu(string readerName)
-        {
-            if (readerName.Contains("5022"))
-            {
-                var sample = new AViatoR.Ok5022Samples(readerName);
-                sample.Menu.RunMenu();
-            }
-            else if (readerName.Contains("5023"))
-            {
-                var sample = new AViatoR.Ok5023Samples(readerName);
-                sample.Menu.RunMenu();
-            }
-            else if (readerName.Contains("5122"))
-            {
-                var sample = new AViatoR.Ok5122Samples(readerName);
-                sample.Menu.RunMenu();
-            }
-            else if(readerName.Contains("5422"))
-            {
-                var sample = new AViatoR.Ok5422Samples(readerName);
-                sample.Menu.RunMenu();
-            }
-        }
-        
     }
 }

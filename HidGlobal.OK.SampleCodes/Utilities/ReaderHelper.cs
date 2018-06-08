@@ -1,5 +1,5 @@
 ﻿/*****************************************************************************************
-    (c) 2017 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
+    (c) 2017-2018 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
 
       Redistribution and use in source and binary forms, with or without modification,
       are permitted provided that the following conditions are met:
@@ -20,6 +20,8 @@
            THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *****************************************************************************************/
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using HidGlobal.OK.Readers;
 using HidGlobal.OK.Readers.AViatoR.Components;
 using HidGlobal.OK.Readers.Components;
@@ -29,47 +31,55 @@ namespace HidGlobal.OK.SampleCodes.Utilities
 {
     public static class ReaderHelper
     {
-        public static void ConnectToReaderWithCard(IReader reader)
+        public static void ConnectToReaderWithCard(ISmartCardReader smartCardReader)
         {
-            ReaderState state = Program.WinscardContext.GetReaderState(reader.PcscReaderName);
-            if (state.AtrLength > 0)
+            try
             {
-                reader.Connect(ReaderSharingMode.Shared, Protocol.Any);
+                ReaderState state = ContextHandler.Instance.GetReaderState(smartCardReader.PcscReaderName, ReaderStates.Unaware);
+                if (state.AtrLength > 0)
+                {
+                    smartCardReader.Connect(ReaderSharingMode.Shared, Protocol.Any);
+                }
             }
-
-            if (!reader.IsConnected)
+            catch (Win32Exception e)
             {
-                throw new Exception($"Unable to connect with {reader.PcscReaderName}\nError code: {reader.CurrentErrorStatus}");
+                throw new Exception($"Unable to connect with {smartCardReader.PcscReaderName}\n{e.Message}");
             }
         }
-        public static void ConnectToReader(IReader reader)
+        public static void ConnectToReader(ISmartCardReader smartCardReader)
         {
-            ReaderState state = Program.WinscardContext.GetReaderState(reader.PcscReaderName);
-            if (state.AtrLength > 0)
+            try
             {
-                reader.Connect(ReaderSharingMode.Shared, Protocol.Any);
+                ReaderState state = ContextHandler.Instance.GetReaderState(smartCardReader.PcscReaderName, ReaderStates.Unaware);
+                if (state.AtrLength > 0)
+                {
+                    smartCardReader.Connect(ReaderSharingMode.Shared, Protocol.Any);
+                }
+                else
+                {
+                    smartCardReader.ConnectDirect();
+                }
             }
-            else
+            catch (Win32Exception e)
             {
-                reader.ConnectDirect();
-            }
-
-            if (!reader.IsConnected)
-            {
-                throw new Exception($"Unable to connect with {reader.PcscReaderName}\nError code: {reader.CurrentErrorStatus}");
+                throw new Exception($"Unable to connect with {smartCardReader.PcscReaderName}\n{e.Message}");
             }
         }
-        public static string SendCommand(IReader reader, string command)
+        public static IReadOnlyList<byte> SendCommand(ISmartCardReader smartCardReader, IReadOnlyList<byte> command)
         {
-            return reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
+            return smartCardReader.ConnectionMode != ReaderSharingMode.Direct ? smartCardReader.Transmit(command) : smartCardReader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
         }
-        public static void GeneralAuthenticateiClass(IReader reader, string description, BookNumber book, PageNumber page, GeneralAuthenticateCommand.ImplicitSelection implicitSelection, GeneralAuthenticateCommand.iClassKeyType keyType, byte keySlot)
+        public static string SendCommand(ISmartCardReader smartCardReader, string command)
+        {
+            return smartCardReader.ConnectionMode != ReaderSharingMode.Direct ? smartCardReader.Transmit(command) : smartCardReader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
+        }
+        public static void GeneralAuthenticateiClass(ISmartCardReader smartCardReader, string description, BookNumber book, PageNumber page, GeneralAuthenticateCommand.ImplicitSelection implicitSelection, GeneralAuthenticateCommand.iClassKeyType keyType, byte keySlot)
         {
             var generalAuthenticateCommand = new Readers.AViatoR.Components.GeneralAuthenticateCommand();
 
             string input =
                 generalAuthenticateCommand.GetiClassApdu(book, page, implicitSelection, keyType, keySlot);
-            string output = reader.Transmit(input);
+            string output = smartCardReader.Transmit(input);
 
             ConsoleWriter.Instance.PrintCommand(description + keySlot.ToString("X2"), input, output);
         }
@@ -83,12 +93,12 @@ namespace HidGlobal.OK.SampleCodes.Utilities
 
             ConsoleWriter.Instance.PrintCommand(description + keySlot.ToString("X2"), input, output);
         }
-        public static void ReadBinaryiClassCommand(IReader reader, string description, ReadBinaryCommand.ReadOption readOption, byte blockNumber, byte expectedlength, BookNumber book = BookNumber.Book0, PageNumber page = PageNumber.Page0)
+        public static void ReadBinaryiClassCommand(ISmartCardReader smartCardReader, string description, ReadBinaryCommand.ReadOption readOption, byte blockNumber, byte expectedlength, BookNumber book = BookNumber.Book0, PageNumber page = PageNumber.Page0)
         {
             var readBinaryCommand = new Readers.AViatoR.Components.ReadBinaryCommand();
 
             string input = readBinaryCommand.GetiClassReadApdu(readOption, blockNumber, expectedlength, book, page);
-            string output = reader.Transmit(input);
+            string output = smartCardReader.Transmit(input);
 
             ConsoleWriter.Instance.PrintCommand(description + "0x" + blockNumber.ToString("X2"), input, output);
         }
@@ -101,13 +111,13 @@ namespace HidGlobal.OK.SampleCodes.Utilities
 
             ConsoleWriter.Instance.PrintCommand(description + "0x" + blockNumber.ToString("X2"), input, output);
         }
-        public static void UpdateBinaryCommand(IReader reader, string description, UpdateBinaryCommand.Type type, byte blockNumber, string data)
+        public static void UpdateBinaryCommand(ISmartCardReader smartCardReader, string description, UpdateBinaryCommand.Type type, byte blockNumber, string data)
         {
             var updateBinaryCommand = new UpdateBinaryCommand();
 
             string input = updateBinaryCommand.GetApdu(Readers.AViatoR.Components.UpdateBinaryCommand.Type.Plain,
                 blockNumber, data);
-            string output = reader.Transmit(input);
+            string output = smartCardReader.Transmit(input);
 
             ConsoleWriter.Instance.PrintCommand(description + "0x" + blockNumber.ToString("X2"), input, output);
         }
@@ -121,36 +131,65 @@ namespace HidGlobal.OK.SampleCodes.Utilities
 
             ConsoleWriter.Instance.PrintCommand(description + "0x" + blockNumber.ToString("X2"), input, output);
         }
-        public static void ReadBinaryMifareCommand(IReader reader, string description, byte blockNumber, byte expectedlength)
+        public static void ReadBinaryMifareCommand(ISmartCardReader smartCardReader, string description, byte blockNumber, byte expectedlength)
         {
             var readBinaryCommand = new Readers.AViatoR.Components.ReadBinaryCommand();
 
             string input = readBinaryCommand.GetMifareReadApdu(blockNumber, expectedlength);
-            string output = reader.Transmit(input);
+            string output = smartCardReader.Transmit(input);
 
             ConsoleWriter.Instance.PrintCommand(description + "0x" + blockNumber.ToString("X2"), input, output);
         }
-        public static void GeneralAuthenticateMifare(IReader reader, string description, byte blockNumber, GeneralAuthenticateCommand.MifareKeyType keyType, byte keySlot)
+        public static void GeneralAuthenticateMifare(ISmartCardReader smartCardReader, string description, byte blockNumber, GeneralAuthenticateCommand.MifareKeyType keyType, byte keySlot)
         {
             var generalAuthenticateCommand = new Readers.AViatoR.Components.GeneralAuthenticateCommand();
 
             string input =
                 generalAuthenticateCommand.GetMifareApdu(blockNumber, keyType, keySlot);
-            string output = reader.Transmit(input);
+            string output = smartCardReader.Transmit(input);
 
             ConsoleWriter.Instance.PrintCommand(description + keySlot.ToString("X2"), input, output);
         }
-        public static void GetDataCommand(IReader reader, string description, GetDataCommand.Type type)
+        public static void GetDataCommand(ISmartCardReader smartCardReader, string description, GetDataCommand.Type type)
         {
             var getData = new GetDataCommand();
 
             ConsoleWriter.Instance.PrintMessage(description);
 
             string input = getData.GetApdu(type);
-            string output = reader.Transmit(input);
+            string output = smartCardReader.Transmit(input);
 
             ConsoleWriter.Instance.PrintCommand(string.Empty, input, output,
                 $"Data: {output.Substring(0, output.Length - 4)}");
         }
+        public static string GetSerialNumber(string readerName)
+        {
+            string readerSerialNumber;
+
+            using (var reader = new SmartCardReader(readerName))
+            {
+                var getSerialNumberCommand = new Readers.AViatoR.Components.SerialNumber();
+
+                ConnectToReader(reader);
+
+                try
+                {
+                    var response = SendCommand(reader, getSerialNumberCommand.GetApdu);
+                    readerSerialNumber = getSerialNumberCommand.TranslateResponse(response);
+                }
+                catch (Exception)
+                {
+                    // TODO Currently errors are suppressed, maybe should add some way to indicate the reason why serial number is not read
+                    return string.Empty;
+                }
+                finally
+                {
+                    if (reader.IsConnected)
+                        reader.Disconnect(CardDisposition.Unpower);
+                }
+            }
+            return readerSerialNumber;
+        }
+
     }
 }

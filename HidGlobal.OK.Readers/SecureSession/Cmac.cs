@@ -1,5 +1,5 @@
 ﻿/*****************************************************************************************
-    (c) 2017 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
+    (c) 2017-2018 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
 
       Redistribution and use in source and binary forms, with or without modification,
       are permitted provided that the following conditions are met:
@@ -20,57 +20,17 @@
            THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *****************************************************************************************/
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using HidGlobal.OK.Readers.Utilities;
 
 namespace HidGlobal.OK.Readers.SecureSession
 {
-    class CMac
+    internal class CMac
     {
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-        private static byte[] OctetStringToByteArray(string hex)
-        {
-            if (string.IsNullOrWhiteSpace(hex))
-            {
-                log.Error("OctetStringToByteArray function parameter is null or whitespace.");
-                return null;
-            }
-            // Remove delimeters
-            hex = hex.Replace(" ", "");
-            hex = hex.Replace("-", "");
-
-            if (hex.Length % 2 != 0)
-                hex = hex.Insert(0, "0");
-            try
-            {
-                return Enumerable.Range(0, hex.Length / 2).Select(x => Convert.ToByte(hex.Substring(x * 2, 2), 16)).ToArray();
-            }
-            catch (Exception error)
-            {
-                log.Error(null, error);
-                return null;
-            }
-        }
-        private static string ByteArrayToOctetString(byte[] bytes)
-        {
-            if (bytes == null)
-            {
-                log.Error("ByteArrayToOctetString function parameter is null.");
-                return null;
-            }
-            try
-            {
-                return bytes.Select(x => x.ToString("X2")).Aggregate((s1, s2) => s1 + s2);
-            }
-            catch (Exception error)
-            {
-                log.Error(null, error);
-                return null;
-            }
-        }
-
-        static byte[] AesEncrypt(byte[] key, byte[] iv, byte[] data)
+        private static byte[] AesEncrypt(byte[] key, byte[] iv, byte[] data)
         {
             byte[] result;
 
@@ -89,11 +49,11 @@ namespace HidGlobal.OK.Readers.SecureSession
             return result;
         }
 
-        static byte[] Rol(byte[] parameter)
+        private static byte[] Rol(IReadOnlyList<byte> parameter)
         {
-            var result = new byte[parameter.Length];
+            var result = new byte[parameter.Count];
             byte carry = 0;
-            for (var i = parameter.Length - 1; i >= 0; i--)
+            for (var i = parameter.Count - 1; i >= 0; i--)
             {
                 var parameter2 = (ushort)(parameter[i] << 1);
                 result[i] = (byte)((parameter2 & 0xFF) + carry);
@@ -104,10 +64,10 @@ namespace HidGlobal.OK.Readers.SecureSession
 
         public static string GetHashTag(string macKey, string dataToMac)
         {
-            var mac = OctetStringToByteArray(macKey);
-            var data = OctetStringToByteArray(dataToMac);
-            byte[] hash = GetHashTag(mac, data);
-            return ByteArrayToOctetString(hash);
+            var hash = GetHashTag(BinaryHelper.ConvertOctetStringToBytes(macKey),
+                BinaryHelper.ConvertOctetStringToBytes(dataToMac));
+
+            return BinaryHelper.ConvertBytesToOctetString(hash);
         }
 
         public static byte[] GetHashTag(byte[] macKey, byte[] dataToMac)

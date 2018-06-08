@@ -1,5 +1,5 @@
 ﻿/*****************************************************************************************
-    (c) 2017 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
+    (c) 2017-2018 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
 
       Redistribution and use in source and binary forms, with or without modification,
       are permitted provided that the following conditions are met:
@@ -20,6 +20,8 @@
            THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *****************************************************************************************/
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
 
 namespace HidGlobal.OK.Readers.Components
@@ -36,7 +38,7 @@ namespace HidGlobal.OK.Readers.Components
         [Description("848 kbps")]
         Rate848 = 0x04,
     };
-    public struct BaudRate
+    public struct BaudRate : IEnumerable<string>
     {
         public bool Rx106;
         public bool Rx212;
@@ -47,5 +49,18 @@ namespace HidGlobal.OK.Readers.Components
         public bool Tx212;
         public bool Tx424;
         public bool Tx848;
+
+        public IEnumerator<string> GetEnumerator()
+        {
+            yield return $"Rx 106 kbps: {Rx106}, Tx 106 kbps: {Tx106}";
+            yield return $"Rx 212 kbps: {Rx212}, Tx 212 kbps: {Tx212}";
+            yield return $"Rx 424 kbps: {Rx424}, Tx 424 kbps: {Tx424}";
+            yield return $"Rx 848 kbps: {Rx848}, Tx 848 kbps: {Tx848}";
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            yield return GetEnumerator();
+        }
     }
 }

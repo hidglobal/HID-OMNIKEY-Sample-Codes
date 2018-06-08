@@ -1,5 +1,5 @@
 ﻿/*****************************************************************************************
-    (c) 2017 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
+    (c) 2017-2018 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
 
       Redistribution and use in source and binary forms, with or without modification,
       are permitted provided that the following conditions are met:
@@ -19,53 +19,56 @@
            (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
            THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *****************************************************************************************/
+
+using System;
 using System.ComponentModel;
 
 namespace HidGlobal.OK.Readers.Components
 {
     /// <summary>State of the smart card in the reader.</summary>
+    [Flags]
     public enum CardState
     {
         /// <summary>
         /// Unknown status.
         /// </summary>
-        [Description("Unknown state")]
+        [Description("Unknown state.")]
         Unknown             = 1,
 
         /// <summary>
         /// There is no card in the reader.
         /// </summary>
-        [Description("Card is absent")]
+        [Description("There is no card in the reader.")]
         Absent              = 2,
         /// <summary>
         /// There is a card in the reader, but it has not been moved into position for use.
         /// </summary>
         /// 
-        [Description("Card is present")]
+        [Description("There is a card in the reader, but it has not been moved into position for use.")]
         Present             = 4,
         /// <summary>
         /// There is a card in the reader in position for use. The card is not powered.
         /// </summary>
         /// 
-        [Description("Card not powered")]
+        [Description("There is a card in the reader in position for use. The card is not powered.")]
         Swallowed           = 8,
 
         /// <summary>
         /// Power is being provided to the card, but the reader driver is unaware of the mode of the card.
         /// </summary>
-        [Description("Card is powered")]
+        [Description("Power is being provided to the card, but the reader driver is unaware of the mode of the card.")]
         Powered             = 16,
 
         /// <summary>
         /// The card has been reset and is awaiting PTS negotiation.
         /// </summary>
-        [Description("Ready for PTS")]
+        [Description("The card has been reset and is awaiting PTS negotiation.")]
         Negotiable          = 32,
 
         /// <summary>
         /// The card has been reset and specific communication protocols have been established.
         /// </summary>
-        [Description("PTS has been set")]
+        [Description("The card has been reset and specific communication protocols have been established.")]
         Specific            = 64
     }
 }

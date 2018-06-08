@@ -1,5 +1,5 @@
 ﻿/*****************************************************************************************
-    (c) 2017 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
+    (c) 2017-2018 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
 
       Redistribution and use in source and binary forms, with or without modification,
       are permitted provided that the following conditions are met:
@@ -27,8 +27,6 @@ namespace HidGlobal.OK.Readers.AViatoR.Components
 {
     public class ReaderEeprom
     {
-        protected static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
         public ushort Minoffset => 0x0000;
         public ushort Maxoffset => 0x03FF;
 
@@ -42,7 +40,7 @@ namespace HidGlobal.OK.Readers.AViatoR.Components
             if (Maxoffset + 1 >= offset + dataLength)
                 return "FF70076B0DA20BA009A7078102" + offset.ToString("X4") + "8201" + dataLength.ToString("X2") + "00";
 
-            throw new ArgumentOutOfRangeException("Attempt to read data out of user eeprom space.");
+            throw new ArgumentException("Attempt to read data out of user eeprom space.");
         }
 
         public string WriteCommand(ushort offset, string dataToWrite)

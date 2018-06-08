@@ -1,5 +1,5 @@
 ﻿/*****************************************************************************************
-    (c) 2017 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
+    (c) 2017-2018 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
 
       Redistribution and use in source and binary forms, with or without modification,
       are permitted provided that the following conditions are met:
@@ -105,7 +105,6 @@ namespace HidGlobal.OK.Readers.AViatoR.Components
 
     public class EnabledClFeatures
     {
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         public string GetApdu => "FF70076B08A206A004A002840000";
         public string[] TranslateResponse(string response)
         {
@@ -114,7 +113,7 @@ namespace HidGlobal.OK.Readers.AViatoR.Components
                 return null;
 
             var data = new List<string>();
-            int flags = Convert.ToInt32(response.Substring(8, 4), 16);
+            var flags = Convert.ToInt32(response.Substring(8, 4), 16);
 
             foreach (var element in Enum.GetValues(typeof(Readers.Components.EnabledCLFeatures)))
             {
@@ -125,9 +124,9 @@ namespace HidGlobal.OK.Readers.AViatoR.Components
                     var fieldAttribiutes = (System.ComponentModel.DescriptionAttribute[])fieldinformation.GetCustomAttributes(typeof(System.ComponentModel.DescriptionAttribute), false);
                     data.Add((fieldAttribiutes.Length > 0) ? fieldAttribiutes[0].Description : element.ToString());
                 }
-                catch (Exception error)
+                catch
                 {
-                    log.Error(null, error);
+                    // ignored
                 }
             }
             return data.ToArray();
@@ -173,14 +172,13 @@ namespace HidGlobal.OK.Readers.AViatoR.Components
             if (!(response.StartsWith("BD") && response.EndsWith("9000")))
                 return null;
 
-            byte[] data = Enumerable.Range(0, response.Length / 2).Select(x => Convert.ToByte(response.Substring(x * 2, 2), 16)).ToArray();
+            var data = Enumerable.Range(0, response.Length / 2).Select(x => Convert.ToByte(response.Substring(x * 2, 2), 16)).ToArray();
             return Encoding.ASCII.GetString(data, 4, data[3]);
         }
     }
 
     public class HostInterfaces
     {
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         public string GetApdu => "FF70076B08A206A004A0028A0000";
         public string[] TranslateResponse(string response)
         {
@@ -189,7 +187,7 @@ namespace HidGlobal.OK.Readers.AViatoR.Components
                 return null;
 
             var data = new List<string>();
-            int flags = Convert.ToInt32(response.Substring(8, 2), 16);
+            var flags = Convert.ToInt32(response.Substring(8, 2), 16);
 
             foreach (var element in Enum.GetValues(typeof(HidGlobal.OK.Readers.Components.HostInterfaceFlags)))
             {
@@ -202,9 +200,9 @@ namespace HidGlobal.OK.Readers.AViatoR.Components
                     var fieldAttribiutes = (System.ComponentModel.DescriptionAttribute[])fieldinformation.GetCustomAttributes(typeof(System.ComponentModel.DescriptionAttribute), false);
                     data.Add((fieldAttribiutes.Length > 0) ? fieldAttribiutes[0].Description : element.ToString());
                 }
-                catch (Exception error)
+                catch
                 {
-                    log.Error(null, error);
+                    // ignored
                 }
             }
             return data.ToArray();
@@ -252,7 +250,6 @@ namespace HidGlobal.OK.Readers.AViatoR.Components
 
     public class HumanInterfaces
     {
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         public string GetApdu => "FF70076B08A206A004A0028E0000"; 
         public string[] TranslateResponse(string response)
         {
@@ -261,7 +258,7 @@ namespace HidGlobal.OK.Readers.AViatoR.Components
                 return null;
 
             var data = new List<string>();
-            int flags = Convert.ToInt32(response.Substring(12, 2), 16);
+            var flags = Convert.ToInt32(response.Substring(12, 2), 16);
 
             foreach (var element in Enum.GetValues(typeof(HidGlobal.OK.Readers.Components.HumanInterfaceFlags)))
             {
@@ -274,9 +271,9 @@ namespace HidGlobal.OK.Readers.AViatoR.Components
                     var fieldAttribiutes = (System.ComponentModel.DescriptionAttribute[])fieldinformation.GetCustomAttributes(typeof(System.ComponentModel.DescriptionAttribute), false);
                     data.Add((fieldAttribiutes.Length > 0) ? fieldAttribiutes[0].Description : element.ToString());
                 }
-                catch (Exception error)
+                catch
                 {
-                    log.Error(null, error);
+                    // ignored
                 }
             }
             return data.ToArray();
@@ -299,7 +296,6 @@ namespace HidGlobal.OK.Readers.AViatoR.Components
 
     public class ExchangeLevel
     {
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         public string GetApdu => "FF70076B08A206A004A002910000"; 
         public string TranslateResponse(string response)
         {
@@ -309,22 +305,25 @@ namespace HidGlobal.OK.Readers.AViatoR.Components
 
             var output = string.Empty;
 
-            int flags = Convert.ToInt32(response.Substring(8, 2), 16);
+            var flags = Convert.ToInt32(response.Substring(8, 2), 16);
 
             foreach (var element in Enum.GetValues(typeof(HidGlobal.OK.Readers.Components.ExchangeLevelFlags)))
             {
-                if ((flags & Convert.ToInt32(element)) != 0)
+                if ((flags & Convert.ToInt32(element)) == 0)
+                    continue;
+
+                try
                 {
-                    try
-                    {
-                        var fieldinformation = element.GetType().GetField(element.ToString());
-                        var fieldAttribiutes = (System.ComponentModel.DescriptionAttribute[])fieldinformation.GetCustomAttributes(typeof(System.ComponentModel.DescriptionAttribute), false);
-                        output = (fieldAttribiutes.Length > 0) ? fieldAttribiutes[0].Description : element.ToString();
-                    }
-                    catch (Exception error)
-                    {
-                        log.Error(null, error);
-                    }
+                    var fieldinformation = element.GetType().GetField(element.ToString());
+                    var fieldAttribiutes =
+                        (System.ComponentModel.DescriptionAttribute[]) fieldinformation.GetCustomAttributes(
+                            typeof(System.ComponentModel.DescriptionAttribute), false);
+
+                    output = (fieldAttribiutes.Length > 0) ? fieldAttribiutes[0].Description : element.ToString();
+                }
+                catch
+                {
+                    // ignored
                 }
             }
             return output;

@@ -1,5 +1,5 @@
 ﻿/*****************************************************************************************
-    (c) 2017 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
+    (c) 2017-2018 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
 
       Redistribution and use in source and binary forms, with or without modification,
       are permitted provided that the following conditions are met:
@@ -20,14 +20,21 @@
            THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *****************************************************************************************/
 using System.ComponentModel;
+using HidGlobal.OK.Readers.WinSCard;
 
 namespace HidGlobal.OK.Readers.Components
 {
     /// <summary>
-    /// Defines for the share mode input parameter of SCardConnect <see cref="WinSCard.SCardConnect(IntPtr, string, int, int, IntPtr, int)"/>.
+    /// Defines for the share mode input parameter of SCardConnect <see cref="WinSCardWrapper.SCardConnect(IntPtr, string, int, int, IntPtr, int)"/>.
     /// </summary>
     public enum ReaderSharingMode : int
     {
+        /// <summary>
+        /// Sharing mode not specified, SCardConnect throws exception if an attempt to connect with this value is made.
+        /// </summary>
+        [Description("Not set.")]
+        NotSet = 0,
+
         /// <summary>
         /// This application will not allow others to share the reader.
         /// </summary>

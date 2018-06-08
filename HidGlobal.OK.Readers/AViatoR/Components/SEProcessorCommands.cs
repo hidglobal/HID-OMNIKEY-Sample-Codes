@@ -1,5 +1,5 @@
 ﻿/*****************************************************************************************
-    (c) 2017 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
+    (c) 2017-2018 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
 
       Redistribution and use in source and binary forms, with or without modification,
       are permitted provided that the following conditions are met:
@@ -87,7 +87,7 @@ namespace HidGlobal.OK.Readers.AViatoR.Components
             return (byte)(TotalLength - writer.BaseStream.Position - 2);
         }
 
-        protected void WriteSuffix(BinaryWriter writer)
+        protected void WritePrefix(BinaryWriter writer)
         {
             writer.Write(_commonHeader);
             writer.Write(BodyLength);
@@ -184,12 +184,11 @@ namespace HidGlobal.OK.Readers.AViatoR.Components
             _keyReference = BinaryHelper.ConvertOctetStringToBytes(keyReference);
             _keyValue = BinaryHelper.ConvertOctetStringToBytes(keyValue);
 
-            byte[] data;
             using (var stream = new MemoryStream())
             {
                 using (var writer = new BinaryWriter(stream))
                 {
-                    WriteSuffix(writer);
+                    WritePrefix(writer);
 
                     writer.Write(SeProcessorCommandTag);
                     writer.Write(GetLengthToEnd(writer));
@@ -210,10 +209,8 @@ namespace HidGlobal.OK.Readers.AViatoR.Components
                     WritePostfix(writer);
                 }
 
-                data = stream.ToArray();
+                return BinaryHelper.ConvertBytesToOctetString(stream.ToArray());
             }
-
-            return BinaryHelper.ConvertBytesToOctetString(data);
         }
 
         private void ValidateInput(string keyReference, string keyValue)
@@ -264,7 +261,7 @@ namespace HidGlobal.OK.Readers.AViatoR.Components
             {
                 using (var writer = new BinaryWriter(stream))
                 {
-                    WriteSuffix(writer);
+                    WritePrefix(writer);
 
                     writer.Write(SeProcessorCommandTag);
                     writer.Write(GetLengthToEnd(writer));
@@ -323,7 +320,7 @@ namespace HidGlobal.OK.Readers.AViatoR.Components
             {
                 using (var writer = new BinaryWriter(stream))
                 {
-                    WriteSuffix(writer);
+                    WritePrefix(writer);
 
                     writer.Write(SeProcessorCommandTag);
                     writer.Write(GetLengthToEnd(writer));
@@ -367,7 +364,7 @@ namespace HidGlobal.OK.Readers.AViatoR.Components
             {
                 using (var writer = new BinaryWriter(stream))
                 {
-                    WriteSuffix(writer);
+                    WritePrefix(writer);
 
                     writer.Write(SeProcessorCommandTag);
                     writer.Write(GetLengthToEnd(writer));
@@ -434,7 +431,7 @@ namespace HidGlobal.OK.Readers.AViatoR.Components
             {
                 using (var writer = new BinaryWriter(stream))
                 {
-                    WriteSuffix(writer);
+                    WritePrefix(writer);
 
                     writer.Write(SeProcessorCommandTag);
                     writer.Write(GetLengthToEnd(writer));
@@ -502,7 +499,7 @@ namespace HidGlobal.OK.Readers.AViatoR.Components
             {
                 using (var writer = new BinaryWriter(stream))
                 {
-                    WriteSuffix(writer);
+                    WritePrefix(writer);
 
                     writer.Write(SeProcessorCommandTag);
                     writer.Write(GetLengthToEnd(writer));
@@ -585,7 +582,7 @@ namespace HidGlobal.OK.Readers.AViatoR.Components
             {
                 using (var writer = new BinaryWriter(stream))
                 {
-                    WriteSuffix(writer);
+                    WritePrefix(writer);
 
                     writer.Write(SeProcessorCommandTag);
                     writer.Write(GetLengthToEnd(writer));
@@ -679,7 +676,7 @@ namespace HidGlobal.OK.Readers.AViatoR.Components
             {
                 using (var writer = new BinaryWriter(stream))
                 {
-                    WriteSuffix(writer);
+                    WritePrefix(writer);
 
                     writer.Write(SeProcessorCommandTag);
                     writer.Write(GetLengthToEnd(writer));
@@ -854,7 +851,7 @@ namespace HidGlobal.OK.Readers.AViatoR.Components
             {
                 using (var writer = new BinaryWriter(stream))
                 {
-                    WriteSuffix(writer);
+                    WritePrefix(writer);
 
                     writer.Write(SeProcessorCommandTag);
                     writer.Write(GetLengthToEnd(writer));

@@ -1,5 +1,5 @@
 ﻿/*****************************************************************************************
-    (c) 2017 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
+    (c) 2017-2018 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
 
       Redistribution and use in source and binary forms, with or without modification,
       are permitted provided that the following conditions are met:
@@ -39,11 +39,11 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
         /// </summary>
         /// <param name="readerName">Reader name seen by smart card resource manager.</param>
         /// <returns></returns>
-        private static IReader Connect(string readerName)
+        private static ISmartCardReader Connect(string readerName)
         {
-            var reader = new Reader(Program.WinscardContext.Handle, readerName);
+            var reader = new SmartCardReader(readerName);
 
-            ReaderState readerState = Program.WinscardContext.GetReaderState(reader.PcscReaderName);
+            ReaderState readerState = ContextHandler.Instance.GetReaderState(reader.PcscReaderName, ReaderStates.Unaware);
             if (readerState.AtrLength > 0)
             {
                 reader.Connect(ReaderSharingMode.Shared, Protocol.Any);
@@ -56,9 +56,9 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
             try
             {
                 var twoWireBusProtocol = new Readers.AViatoR.Components.Synchronus2WBP();
-                IReader reader = Connect(readerName);
+                ISmartCardReader smartCardReader = Connect(readerName);
 
-                if (!reader.IsConnected)
+                if (!smartCardReader.IsConnected)
                     return;
 
                 // address of first byte to be read
@@ -68,7 +68,7 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
                 for (int i = 32; i < 256; i++)
                 {
                     string command = twoWireBusProtocol.GetApdu(Synchronus2WBP.ControlByte.ReadMainMemory, address, notUsed);
-                    string response = reader.Transmit(command);
+                    string response = smartCardReader.Transmit(command);
                     if (response.StartsWith("9D01") && response.EndsWith("9000"))
                     {
                         string data = response.Substring(4, 2);
@@ -83,7 +83,7 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
                 }
                 Console.WriteLine($"\nMain Memory starting from address 0x20 to address 0xFF:\n{cardMemory}\n");
 
-                reader.Disconnect(CardDisposition.Unpower);
+                smartCardReader.Disconnect(CardDisposition.Unpower);
             }
             catch (Exception e)
             {
@@ -95,15 +95,15 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
             try
             {
                 var twoWireBusProtocol = new Readers.AViatoR.Components.Synchronus2WBP();
-                IReader reader = Connect(readerName);
+                ISmartCardReader smartCardReader = Connect(readerName);
 
-                if (!reader.IsConnected)
+                if (!smartCardReader.IsConnected)
                     return;
 
                 byte notUsed = 0x00;
 
                 string command = twoWireBusProtocol.GetApdu(Synchronus2WBP.ControlByte.ReadProtectionMemory, notUsed, notUsed);
-                string response = reader.Transmit(command);
+                string response = smartCardReader.Transmit(command);
                 if (response.StartsWith("9D04") && response.EndsWith("9000"))
                 {
                     string data = response.Substring(4, 8);
@@ -113,7 +113,7 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
                 {
                     PrintData("Read Protection Memory", command, response, "Error Response");
                 }
-                reader.Disconnect(CardDisposition.Unpower);
+                smartCardReader.Disconnect(CardDisposition.Unpower);
             }
             catch (Exception e)
             {
@@ -125,9 +125,9 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
             try
             {
                 var twoWireBusProtocol = new Readers.AViatoR.Components.Synchronus2WBP();
-                IReader reader = Connect(readerName);
+                ISmartCardReader smartCardReader = Connect(readerName);
 
-                if (!reader.IsConnected)
+                if (!smartCardReader.IsConnected)
                     return;
                 // Following code is commented to prevent usage of incorrect Pin code, which can lead to blocking the synchronus card if done three times in row
                 // Verification with correct pin code is necessary to write any data into card memory
@@ -147,23 +147,23 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
                 byte data = 0x01;
                 
                 string command = twoWireBusProtocol.GetApdu(Synchronus2WBP.ControlByte.UpdateMainMemory, address, data);
-                string response = reader.Transmit(command);
+                string response = smartCardReader.Transmit(command);
                 PrintData($"Write Main Memory, address: 0x{address:X2}, data: 0x{data:X2}", command, response, response.Equals("9D009000") ? "Success" : "Error Response");
 
                 address = 0x20;
                 data = 0xF0;
                 command = twoWireBusProtocol.GetApdu(Synchronus2WBP.ControlByte.UpdateMainMemory, address, data);
-                response = reader.Transmit(command);
+                response = smartCardReader.Transmit(command);
                 PrintData($"Write Main Memory, address: 0x{address:X2}, data: 0x{data:X2}", command, response, response.Equals("9D009000") ? "Success" : "Error Response");
 
-                reader.Disconnect(CardDisposition.Unpower);
+                smartCardReader.Disconnect(CardDisposition.Unpower);
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
             }
         }
-        private static void VerifyUser2Wbp(IReader reader, byte firstPinByte, byte secondPinByte, byte thirdPinByte)
+        private static void VerifyUser2Wbp(ISmartCardReader smartCardReader, byte firstPinByte, byte secondPinByte, byte thirdPinByte)
         {
             var twoWireBusProtocol = new Readers.AViatoR.Components.Synchronus2WBP();
 
@@ -173,7 +173,7 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
 
             // Read Error Counter
             string command = twoWireBusProtocol.GetApdu(Synchronus2WBP.ControlByte.ReadSecurityMemory, notUsed, notUsed);
-            string response = reader.Transmit(command);
+            string response = smartCardReader.Transmit(command);
             string currentErrorCounter = response.Substring(4, 2);
             PrintData("Read Error Counter", command, response, $"0x{currentErrorCounter}");
             
@@ -194,30 +194,30 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
                     return;
             }
             command = twoWireBusProtocol.GetApdu(Synchronus2WBP.ControlByte.UpdateSecurityMemory, 0x00, newErrorCounter);
-            response = reader.Transmit(command);
+            response = smartCardReader.Transmit(command);
             PrintData("Write new Error Counter", command, response, $"0x{newErrorCounter:X2}");
             
             // Compare verification data - first part
             command = twoWireBusProtocol.GetApdu(Synchronus2WBP.ControlByte.CompareVerificationData, 0x01, firstPinByte);
-            response = reader.Transmit(command);
+            response = smartCardReader.Transmit(command);
             PrintData("Compare verification data - first part", command, response, $"{firstPinByte:X2}");
             
             // Compare verification data - second part
             command = twoWireBusProtocol.GetApdu(Synchronus2WBP.ControlByte.CompareVerificationData, 0x02, secondPinByte);
-            response = reader.Transmit(command);
+            response = smartCardReader.Transmit(command);
             PrintData("Compare verification data - second part", command, response, $"{secondPinByte:X2}");
             
             // Compare verification data - third part
             command = twoWireBusProtocol.GetApdu(Synchronus2WBP.ControlByte.CompareVerificationData, 0x03, thirdPinByte);
-            response = reader.Transmit(command);
+            response = smartCardReader.Transmit(command);
             PrintData("Compare verification data - third part", command, response, $"{thirdPinByte:X2}");
             
             // Reset Error Counter
             command = twoWireBusProtocol.GetApdu(Synchronus2WBP.ControlByte.UpdateSecurityMemory, 0x00, 0xFF);
-            response = reader.Transmit(command);
+            response = smartCardReader.Transmit(command);
             PrintData("Reset Error Counter", command, response, "");
         }
-        private static void VerifyUser3Wbp(IReader reader, byte firstPinByte, byte secondPinByte)
+        private static void VerifyUser3Wbp(ISmartCardReader smartCardReader, byte firstPinByte, byte secondPinByte)
         {
             var threeWireBusProtocol = new Readers.AViatoR.Components.Synchronus3WBP();
 
@@ -226,7 +226,7 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
 
             // Read Error Counter
             string command = threeWireBusProtocol.ReadErrorCounterApdu();
-            string response = reader.Transmit(command);
+            string response = smartCardReader.Transmit(command);
             string currentErrorCounter = response.Substring(4, 2);
             PrintData("Read Error Counter", command, response, $"0x{currentErrorCounter}");
             
@@ -259,22 +259,22 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
                     return;
             }
             command = threeWireBusProtocol.WriteErrorCounterApdu(newErrorCounter);
-            response = reader.Transmit(command);
+            response = smartCardReader.Transmit(command);
             PrintData("Write new Error Counter", command, response, $"0x{newErrorCounter:X2}");
 
             // Verify pin first byte
             command = threeWireBusProtocol.VerifyFirstPinByte(firstPinByte);
-            response = reader.Transmit(command);
+            response = smartCardReader.Transmit(command);
             PrintData("Verify first pin byte", command, response, $"{firstPinByte:X2}");
 
             // Verify pin second byte
             command = threeWireBusProtocol.VerifySecondPinByte(secondPinByte);
-            response = reader.Transmit(command);
+            response = smartCardReader.Transmit(command);
             PrintData("Verify second pin byte", command, response, $"{secondPinByte:X2}");
 
             // Reset Error Counter
             command = threeWireBusProtocol.ResetErrorCounterApdu();
-            response = reader.Transmit(command);
+            response = smartCardReader.Transmit(command);
             PrintData("Reset Error Counter", command, response, "");
         }
         public static void ReadMainMemory3WbpExample(string readerName)
@@ -282,9 +282,9 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
             try
             {
                 var threeWireBusProtocol = new Readers.AViatoR.Components.Synchronus3WBP();
-                IReader reader = Connect(readerName);
+                ISmartCardReader smartCardReader = Connect(readerName);
 
-                if (!reader.IsConnected)
+                if (!smartCardReader.IsConnected)
                     return;
 
                 // address of first byte to be read
@@ -296,7 +296,7 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
                 for (int i = 0x00; i < 0x0400; i++)
                 {
                     string command = threeWireBusProtocol.GetApdu(Synchronus3WBP.ControlByte.Read9BitsDataWithProtectBit, address, notUsed);
-                    string response = reader.Transmit(command);
+                    string response = smartCardReader.Transmit(command);
 
                     if (response.StartsWith("9D02") && response.EndsWith("9000"))
                     {
@@ -314,7 +314,7 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
                     address++;
                 }
                 Console.WriteLine($"\nMain Memory starting from address 0x0000 to address 0x03FF:\n{cardMemory}\n");
-                reader.Disconnect(CardDisposition.Unpower);
+                smartCardReader.Disconnect(CardDisposition.Unpower);
             }
             catch (Exception e)
             {
@@ -326,9 +326,9 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
             try
             {
                 var threeWireBusProtocol = new Readers.AViatoR.Components.Synchronus3WBP();
-                IReader reader = Connect(readerName);
+                ISmartCardReader smartCardReader = Connect(readerName);
 
-                if (!reader.IsConnected)
+                if (!smartCardReader.IsConnected)
                     return;
                 // Following code is commented to prevent usage of incorrect Pin code, which can lead to blocking the synchronus card if done several times in row
                 // Verification with correct pin code is necessary to write any data into card memory
@@ -347,17 +347,17 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
                 byte data = 0xAB;
                 
                 string command = threeWireBusProtocol.GetApdu(Synchronus3WBP.ControlByte.WriteAndEraseWithoutProtectBit, address, data);
-                string response = reader.Transmit(command);
+                string response = smartCardReader.Transmit(command);
                 PrintData($"Write Main Memory, address: 0x{address:X4}, data: 0x{data:X2}", command, response, response.Equals("9D009000") ? "Success" : "Error Response");
 
                 address = 0x01FF;
                 data = 0xCC;
                 command = threeWireBusProtocol.GetApdu(Synchronus3WBP.ControlByte.WriteAndEraseWithoutProtectBit, address, data);
-                response = reader.Transmit(command);
+                response = smartCardReader.Transmit(command);
                 PrintData($"Write Main Memory, address: 0x{address:X4}, data: 0x{data:X2}", command, response, response.Equals("9D009000") ? "Success" : "Error Response");
 
 
-                reader.Disconnect(CardDisposition.Unpower);
+                smartCardReader.Disconnect(CardDisposition.Unpower);
             }
             catch (Exception e)
             {
@@ -369,9 +369,9 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
             try
             {
                 var i2c = new Readers.AViatoR.Components.SynchronusI2C();
-                IReader reader = Connect(readerName);
+                ISmartCardReader smartCardReader = Connect(readerName);
 
-                if (!reader.IsConnected)
+                if (!smartCardReader.IsConnected)
                     return;
 
                 // Read 1 byte from address 0x0000 from AT24C16 card
@@ -379,24 +379,24 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
                 byte bytesToRead = 0x01;
 
                 string command = i2c.GetReadCommandApdu(SynchronusI2C.MemorySize._2048, address, bytesToRead);
-                string response = reader.Transmit(command);
+                string response = smartCardReader.Transmit(command);
                 PrintData($"I2C Read {bytesToRead} byte from address 0x{address:X6}", command, response, "");
 
                 // Read 10 bytes from address 0x0010 from AT24C16 card
                 address = 0x0010;
                 bytesToRead = 0x0A;
                 command = i2c.GetReadCommandApdu(SynchronusI2C.MemorySize._2048, address, bytesToRead);
-                response = reader.Transmit(command);
+                response = smartCardReader.Transmit(command);
                 PrintData($"I2C Read {bytesToRead} bytes starting from address 0x{address:X6}", command, response, "");
 
                 // Read 32 bytes from address 0x0400 from AT24C16 card
                 address = 0x0400;
                 bytesToRead = 0x20;
                 command = i2c.GetReadCommandApdu(SynchronusI2C.MemorySize._2048, address, bytesToRead);
-                response = reader.Transmit(command);
+                response = smartCardReader.Transmit(command);
                 PrintData($"I2C Read {bytesToRead} bytes starting from address 0x{address:X6}", command, response, "");
                 
-                reader.Disconnect(CardDisposition.Unpower);
+                smartCardReader.Disconnect(CardDisposition.Unpower);
             }
             catch (Exception e)
             {
@@ -408,9 +408,9 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
             try
             {
                 var i2c = new Readers.AViatoR.Components.SynchronusI2C();
-                IReader reader = Connect(readerName);
+                ISmartCardReader smartCardReader = Connect(readerName);
 
-                if (!reader.IsConnected)
+                if (!smartCardReader.IsConnected)
                     return;
 
                 // Write 1 byte to address 0x0000, AT24C16 card
@@ -419,7 +419,7 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
                 string data = "01";
 
                 string command = i2c.GetWriteCommandApdu(SynchronusI2C.MemorySize._2048, address, numberOfBytesToWrite, data);
-                string response = reader.Transmit(command);
+                string response = smartCardReader.Transmit(command);
                 PrintData($"I2C Write {numberOfBytesToWrite} byte to address 0x{address:X6}", command, response, "");
 
                 // Write 10 bytes to address 0x0010, AT24C16 card
@@ -427,7 +427,7 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
                 numberOfBytesToWrite = 0x0A;
                 data = "FFFFFFFFFFFFFFFFFFFF";
                 command = i2c.GetWriteCommandApdu(SynchronusI2C.MemorySize._2048, address, numberOfBytesToWrite, data);
-                response = reader.Transmit(command);
+                response = smartCardReader.Transmit(command);
                 PrintData($"I2C Write {numberOfBytesToWrite} bytes starting from address 0x{address:X6}", command, response, "");
 
                 // Write 32 bytes to address 0x0400, AT24C16 card
@@ -436,17 +436,17 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
                 numberOfBytesToWrite = 0x10;
                 data = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
                 command = i2c.GetWriteCommandApdu(SynchronusI2C.MemorySize._2048, address, numberOfBytesToWrite, data);
-                response = reader.Transmit(command);
+                response = smartCardReader.Transmit(command);
                 PrintData($"I2C Write {numberOfBytesToWrite} bytes starting from address 0x{address:X6}", command, response, "");
                 // second part of write operation
                 address += 16;
                 numberOfBytesToWrite = 0x10;
                 data = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
                 command = i2c.GetWriteCommandApdu(SynchronusI2C.MemorySize._2048, address, numberOfBytesToWrite, data);
-                response = reader.Transmit(command);
+                response = smartCardReader.Transmit(command);
                 PrintData($"I2C Write {numberOfBytesToWrite} bytes starting from address 0x{address:X6}", command, response, "");
 
-                reader.Disconnect(CardDisposition.Unpower);
+                smartCardReader.Disconnect(CardDisposition.Unpower);
             }
             catch (Exception e)
             {
@@ -458,9 +458,9 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
             try
             {
                 var i2c = new Readers.AViatoR.Components.SynchronusI2C();
-                IReader reader = Connect(readerName);
+                ISmartCardReader smartCardReader = Connect(readerName);
 
-                if (!reader.IsConnected)
+                if (!smartCardReader.IsConnected)
                     return;
 
                 // Read 1 byte from address 0x0000 from AT24C128 card
@@ -468,24 +468,24 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
                 byte bytesToRead = 0x01;
 
                 string command = i2c.GetReadCommandApdu(SynchronusI2C.MemorySize._16384, address, bytesToRead);
-                string response = reader.Transmit(command);
+                string response = smartCardReader.Transmit(command);
                 PrintData($"I2C Read {bytesToRead} byte from address 0x{address:X6}", command, response, "");
 
                 // Read 10 bytes from address 0x0010 from AT24C128 card
                 address = 0x0010;
                 bytesToRead = 0x0A;
                 command = i2c.GetReadCommandApdu(SynchronusI2C.MemorySize._16384, address, bytesToRead);
-                response = reader.Transmit(command);
+                response = smartCardReader.Transmit(command);
                 PrintData($"I2C Read {bytesToRead} bytes starting from address 0x{address:X6}", command, response, "");
 
                 // Read 32 bytes from address 0x0400 from AT24C128 card
                 address = 0x0400;
                 bytesToRead = 0x20;
                 command = i2c.GetReadCommandApdu(SynchronusI2C.MemorySize._16384, address, bytesToRead);
-                response = reader.Transmit(command);
+                response = smartCardReader.Transmit(command);
                 PrintData($"I2C Read {bytesToRead} bytes starting from address 0x{address:X6}", command, response, "");
 
-                reader.Disconnect(CardDisposition.Unpower);
+                smartCardReader.Disconnect(CardDisposition.Unpower);
             }
             catch (Exception e)
             {
@@ -497,9 +497,9 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
             try
             {
                 var i2c = new Readers.AViatoR.Components.SynchronusI2C();
-                IReader reader = Connect(readerName);
+                ISmartCardReader smartCardReader = Connect(readerName);
 
-                if (!reader.IsConnected)
+                if (!smartCardReader.IsConnected)
                     return;
 
                 // Write 1 byte to address 0x0000, AT24C128 card
@@ -508,7 +508,7 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
                 string data = "FF";
 
                 string command = i2c.GetWriteCommandApdu(SynchronusI2C.MemorySize._16384, address, numberOfBytesToWrite, data);
-                string response = reader.Transmit(command);
+                string response = smartCardReader.Transmit(command);
                 PrintData($"I2C Write {numberOfBytesToWrite} byte to address 0x{address:X6}", command, response, "");
 
                 // Write 10 bytes to address 0x0010, AT24C128 card
@@ -516,7 +516,7 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
                 numberOfBytesToWrite = 0x0A;
                 data = "FFFFFFFFFFFFFFFFFFFF";
                 command = i2c.GetWriteCommandApdu(SynchronusI2C.MemorySize._16384, address, numberOfBytesToWrite, data);
-                response = reader.Transmit(command);
+                response = smartCardReader.Transmit(command);
                 PrintData($"I2C Write {numberOfBytesToWrite} bytes starting from address 0x{address:X6}", command, response, "");
 
                 // Write 32 bytes to address 0x0400, AT24C128 card
@@ -524,10 +524,10 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
                 numberOfBytesToWrite = 0x20;
                 data = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
                 command = i2c.GetWriteCommandApdu(SynchronusI2C.MemorySize._16384, address, numberOfBytesToWrite, data);
-                response = reader.Transmit(command);
+                response = smartCardReader.Transmit(command);
                 PrintData($"I2C Write {numberOfBytesToWrite} bytes starting from address 0x{address:X6}", command, response, "");
 
-                reader.Disconnect(CardDisposition.Unpower);
+                smartCardReader.Disconnect(CardDisposition.Unpower);
             }
             catch (Exception e)
             {

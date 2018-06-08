@@ -1,5 +1,5 @@
 ﻿/*****************************************************************************************
-    (c) 2017 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
+    (c) 2017-2018 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
 
       Redistribution and use in source and binary forms, with or without modification,
       are permitted provided that the following conditions are met:
@@ -32,7 +32,7 @@ namespace HidGlobal.OK.Readers.Components
     /// For example, in Win32 the length of any PCI information must be a multiple of four bytes so that it aligns on a 32-bit boundary.
     /// </remarks>
     [StructLayout(LayoutKind.Sequential)]
-    public struct IORequest
+    public struct IoRequest
     {
         /// <summary>
         /// Protocol in use <see cref="SCardProtocol"/>.

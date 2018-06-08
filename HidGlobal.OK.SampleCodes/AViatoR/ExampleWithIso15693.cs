@@ -1,5 +1,5 @@
 ﻿/*****************************************************************************************
-    (c) 2017 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
+    (c) 2017-2018 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
 
       Redistribution and use in source and binary forms, with or without modification,
       are permitted provided that the following conditions are met:
@@ -31,19 +31,19 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
     {
         public class ReadBinaryNXPiCode
         {
-            void SendReadBinaryCommand(IReader reader, byte msb, byte lsb, byte expectedLength)
+            void SendReadBinaryCommand(ISmartCardReader smartCardReader, byte msb, byte lsb, byte expectedLength)
             {
                 ConsoleWriter.Instance.PrintMessage($"Read Binary NXP iCode card, address: 0x{msb:X2}{lsb:X2}");
 
                 var readBinary = new ReadBinaryCommand();
                 string input = readBinary.GetApdu(msb, lsb, expectedLength);
-                var output = reader.Transmit(input);
+                var output = smartCardReader.Transmit(input);
 
                 ConsoleWriter.Instance.PrintCommand(string.Empty, input, output);
             }
             public void Run(string readerName)
             {
-                var reader = new Reader(Program.WinscardContext.Handle, readerName);
+                var reader = new SmartCardReader(readerName);
                 
                 try
                 {
@@ -77,19 +77,19 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
         }
         public class UpdateBinaryNXPiCode
         {
-            void SendUpdateBinaryCommand(IReader reader, UpdateBinaryCommand.Type type, byte blockNumber, string data)
+            void SendUpdateBinaryCommand(ISmartCardReader smartCardReader, UpdateBinaryCommand.Type type, byte blockNumber, string data)
             {
                 ConsoleWriter.Instance.PrintMessage($"Update Binary NXP iCode card, block number: 0x{blockNumber:X2}, with data :{data}");
 
                 var updateBinary = new UpdateBinaryCommand();
                 string input = updateBinary.GetApdu(type, blockNumber, data);
-                var output = reader.Transmit(input);
+                var output = smartCardReader.Transmit(input);
 
                 ConsoleWriter.Instance.PrintCommand(string.Empty, input, output);
             }
             public void Run(string readerName)
             {
-                var reader = new Reader(Program.WinscardContext.Handle, readerName);
+                var reader = new SmartCardReader(readerName);
                 
                 try
                 {

@@ -1,5 +1,5 @@
 ﻿/*****************************************************************************************
-    (c) 2017 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
+    (c) 2017-2018 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
 
       Redistribution and use in source and binary forms, with or without modification,
       are permitted provided that the following conditions are met:
@@ -47,14 +47,14 @@ namespace HidGlobal.OK.Readers.SecureSession.SamSecureSession
         private string _sessionMacKey2;
         private string _rMac;
         private string _cMac;
-        private IReader _reader;
-        public SamSecureSession(IReader reader)
+        private ISmartCardReader _smartCardReader;
+        public SamSecureSession(ISmartCardReader smartCardReader)
         {
             IsSessionActive = false;
-            if (reader == null)
-                throw new ArgumentNullException(nameof(reader));
+            if (smartCardReader == null)
+                throw new ArgumentNullException(nameof(smartCardReader));
 
-            _reader = reader;
+            _smartCardReader = smartCardReader;
         }
 
         public void Establish(byte[] masterKey, byte keyNumber)
@@ -79,8 +79,8 @@ namespace HidGlobal.OK.Readers.SecureSession.SamSecureSession
                 
             string wrapedTerminateCommand = Wrap("FF70076B04A102A200");
             string command = $"FF70076B{wrapedTerminateCommand.Length / 2:X2}" + wrapedTerminateCommand + "00";
-            string response = _reader.Transmit(command);
-            _reader.Disconnect();
+            string response = _smartCardReader.Transmit(command);
+            _smartCardReader.Disconnect();
 
             ClearFields();
             if (response == "9D0290009000")
@@ -92,7 +92,7 @@ namespace HidGlobal.OK.Readers.SecureSession.SamSecureSession
         {
             string wrapedData = Wrap(command);
             command = $"FF70076B{wrapedData.Length / 2:X2}" + wrapedData + "00";
-            string response =_reader.Transmit(command);
+            string response =_smartCardReader.Transmit(command);
             if (!response.StartsWith("9D"))
             {
                 ClearFields();
@@ -115,7 +115,7 @@ namespace HidGlobal.OK.Readers.SecureSession.SamSecureSession
         public void Dispose()
         {
             Terminate();
-            _reader = null;
+            _smartCardReader = null;
         }
         private string Wrap(string data)
         {
@@ -180,7 +180,7 @@ namespace HidGlobal.OK.Readers.SecureSession.SamSecureSession
             }
 
             string initAuthCommand = "FF70076B14" + $"A112A0108001{versionSecCh:X2}" + $"8101{keyNumber:X2}" + $"8208{clientNonce}00";
-            string response = _reader.Transmit(initAuthCommand);
+            string response = _smartCardReader.Transmit(initAuthCommand);
 
             if (!(response.StartsWith("9D20") && response.EndsWith("9000")))
             {
@@ -210,7 +210,7 @@ namespace HidGlobal.OK.Readers.SecureSession.SamSecureSession
             string clientCryptogramCmac = ComputeMac(clientCryptogram);
 
             string continueAuthCommand = "FF70076B28" + $"A126A1248010{clientCryptogram}" + $"8110{clientCryptogramCmac}00";
-            string response = _reader.Transmit(continueAuthCommand);
+            string response = _smartCardReader.Transmit(continueAuthCommand);
 
             if (!(response.StartsWith("9D10") && response.EndsWith("9000")))
             {
@@ -308,16 +308,16 @@ namespace HidGlobal.OK.Readers.SecureSession.SamSecureSession
         }
         private void Connect()
         {
-            if (_reader.IsConnected)
-                _reader.Disconnect(CardDisposition.Reset);
+            if (_smartCardReader.IsConnected)
+                _smartCardReader.Disconnect(CardDisposition.Reset);
 
-            _reader.Connect(ReaderSharingMode.Exclusive, Protocol.Any);
+            _smartCardReader.Connect(ReaderSharingMode.Exclusive, Protocol.Any);
 
-            if (_reader.CurrentErrorStatus == ErrorCodes.SCARD_S_SUCCESS)
+            if (_smartCardReader.IsConnected)
                 return;
 
             ClearFields();
-            throw new Exception($"Failed to connect with: {_reader.PcscReaderName}, mode: {_reader.ConnectionMode}, error: {_reader.CurrentErrorStatus}");
+            throw new Exception($"Failed to connect with: {_smartCardReader.PcscReaderName}, mode: {_smartCardReader.ConnectionMode}");
         }
     }
 }

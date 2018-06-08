@@ -1,5 +1,5 @@
 ﻿/*****************************************************************************************
-    (c) 2017 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
+    (c) 2017-2018 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
 
       Redistribution and use in source and binary forms, with or without modification,
       are permitted provided that the following conditions are met:
@@ -40,42 +40,6 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
 
             protected abstract void ExecuteExample(SamSecureSession session);
 
-            protected virtual void ExecuteExample(Reader reader)
-            {
-                ConsoleWriter.Instance.PrintMessage("Example without secure session is not available");
-            }
-
-            public void RunWithoutSecureSession()
-            {
-                try
-                {
-                    ConsoleWriter.Instance.PrintSplitter();
-                    ConsoleWriter.Instance.PrintTask("Establishing connection with a card");
-
-                    using (var reader = new Reader(Program.WinscardContext.Handle, _readerName))
-                    {
-                        reader.Connect(ReaderSharingMode.Shared, Protocol.Any);
-
-                        if (reader.IsConnected)
-                        {
-                            ConsoleWriter.Instance.PrintMessage("Connection with a card established");
-
-                            ExecuteExample(reader);
-
-                            ConsoleWriter.Instance.PrintSplitter();
-                        }
-                        else
-                        {
-                            ConsoleWriter.Instance.PrintError("Failed to establish connection with a card");
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    ConsoleWriter.Instance.PrintError("Exception's been thrown: message = " + e.Message);
-                }
-            }
-
             public void Run()
             {
                 try
@@ -83,7 +47,7 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
                     ConsoleWriter.Instance.PrintSplitter();
                     ConsoleWriter.Instance.PrintTask("Establishing SAM Secure Session");
 
-                    var reader = new Reader(Program.WinscardContext.Handle, _readerName);
+                    var reader = new SmartCardReader(_readerName);
 
                     using (var secureSession = new SamSecureSession(reader))
                     {
@@ -284,23 +248,6 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
                 SendReadPACSDataCommand(session);
             }
 
-            protected override void ExecuteExample(Reader reader)
-            {
-                SendReadPACSDataCommand(reader);
-            }
-
-            private void SendReadPACSDataCommand(Reader reader)
-            {
-                var command = new SEPReadPACSData();
-
-                var input = command.GetApdu();
-                var output = reader.Transmit(input);
-                var response = command.TranslateResponse(output);
-
-                PrintCommand("Read PACS Data", input, output, response);
-                PrintDetailedResponse(response);
-            }
-
             private void SendReadPACSDataCommand(SamSecureSession session)
             {
                 var command = new SEPReadPACSData();
@@ -331,7 +278,7 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
 
         public class LoadKeyToPcScContainer
         {
-            private const string SamSecureSessionMasterKey = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"; // replace with valid Key
+            private const string SamSecureSessionMasterKey = "00000000000000000000000000000000"; // replace with valid Key
             private const byte SamSecureSessionKeyNumber = 0x80; // End-User key role
 
             private void LoadKeyCommand(ISecureChannel session, string description, byte keySlot, LoadKeyCommand.KeyType keyType, LoadKeyCommand.Persistence persistence, LoadKeyCommand.Transmission transmission, LoadKeyCommand.KeyLength keyLength, string key)
@@ -344,7 +291,7 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
             }
             public void Run(string readerName)
             {
-                var reader = new Reader(Program.WinscardContext.Handle, readerName);
+                var reader = new SmartCardReader(readerName);
                 var secureChannel = new Readers.SecureSession.SamSecureSession.SamSecureSession(reader);
                 try
                 {

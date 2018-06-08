@@ -1,0 +1,5 @@
+C:\Jenkins\workspace\Samples\SampleCodes\SampleCodes\Utilities\KbwToCcidSwitchApi\bin\Release\KbwToCcidSwitchApi.dll
+C:\Jenkins\workspace\Samples\SampleCodes\SampleCodes\Utilities\KbwToCcidSwitchApi\bin\Release\KbwToCcidSwitchApi.pdb
+C:\Jenkins\workspace\Samples\SampleCodes\SampleCodes\Utilities\KbwToCcidSwitchApi\obj\Release\KbwToCcidSwitchApi.csprojResolveAssemblyReference.cache
+C:\Jenkins\workspace\Samples\SampleCodes\SampleCodes\Utilities\KbwToCcidSwitchApi\obj\Release\KbwToCcidSwitchApi.dll
+C:\Jenkins\workspace\Samples\SampleCodes\SampleCodes\Utilities\KbwToCcidSwitchApi\obj\Release\KbwToCcidSwitchApi.pdb

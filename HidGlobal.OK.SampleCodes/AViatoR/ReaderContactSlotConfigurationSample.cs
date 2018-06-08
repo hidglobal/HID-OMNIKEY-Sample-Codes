@@ -1,5 +1,5 @@
 ﻿/*****************************************************************************************
-    (c) 2017 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
+    (c) 2017-2018 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
 
       Redistribution and use in source and binary forms, with or without modification,
       are permitted provided that the following conditions are met:
@@ -49,11 +49,11 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
                 Console.WriteLine($"<-- {command}\n--> {response}\n{title}:\n\t{data.ToList().Aggregate((i, j) => i + "\n\t" + j)}");
             }
         }
-        private static IReader Connect(string readerName)
+        private static ISmartCardReader Connect(string readerName)
         {
-            var reader = new Reader(Program.WinscardContext.Handle, readerName);
+            var reader = new SmartCardReader(readerName);
 
-            var readerState = Program.WinscardContext.GetReaderState(reader.PcscReaderName);
+            var readerState = ContextHandler.Instance.GetReaderState(reader.PcscReaderName, ReaderStates.Unaware);
             if (readerState.AtrLength > 0)
                 reader.Connect(ReaderSharingMode.Shared, Protocol.Any);
             else
@@ -65,9 +65,9 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
         {
             var contactSlot = new Readers.AViatoR.Components.ContactSlotConfiguration();
 
-            IReader reader = Connect(readerName);
+            ISmartCardReader smartCardReader = Connect(readerName);
 
-            if (!reader.IsConnected)
+            if (!smartCardReader.IsConnected)
                 return;
 
             string command;
@@ -75,17 +75,17 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
 
             // Read contact slot enable
             command = contactSlot.ContactSlotEnable.GetApdu;
-            response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
+            response = smartCardReader.ConnectionMode != ReaderSharingMode.Direct ? smartCardReader.Transmit(command) : smartCardReader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
             PrintData("Contact Slot", command, response, contactSlot.ContactSlotEnable.TranslateGetResponse(response));
 
             // Read operating mode
             command = contactSlot.OperatingMode.GetApdu;
-            response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
+            response = smartCardReader.ConnectionMode != ReaderSharingMode.Direct ? smartCardReader.Transmit(command) : smartCardReader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
             PrintData("Operating Mode", command, response, contactSlot.OperatingMode.TranslateGetResponse(response).ToString());
 
             // Read contact slot enable
             command = contactSlot.VoltageSequence.GetApdu;
-            response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
+            response = smartCardReader.ConnectionMode != ReaderSharingMode.Direct ? smartCardReader.Transmit(command) : smartCardReader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
             List<VoltageSequenceFlags> voltageSequenceList = contactSlot.VoltageSequence.TranslateGetResponse(response);
             if (voltageSequenceList.Count == 0)
             {
@@ -97,16 +97,16 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
             }
 
             // close connection
-            reader.Disconnect(CardDisposition.Unpower);
+            smartCardReader.Disconnect(CardDisposition.Unpower);
         }
 
         public static void SetContactSlotEnable(string readerName)
         {
             var contactSlot = new Readers.AViatoR.Components.ContactSlotConfiguration();
 
-            IReader reader = Connect(readerName);
+            ISmartCardReader smartCardReader = Connect(readerName);
 
-            if (!reader.IsConnected)
+            if (!smartCardReader.IsConnected)
                 return;
 
             string command;
@@ -114,7 +114,7 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
             
             //enable
             command = contactSlot.ContactSlotEnable.SetApdu(true);
-            response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
+            response = smartCardReader.ConnectionMode != ReaderSharingMode.Direct ? smartCardReader.Transmit(command) : smartCardReader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
             PrintData("Set Contact Slot", command, response, "Enable");
 
             //disable
@@ -122,16 +122,16 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
             // response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
             // PrintData("Set Contact Slot", command, response, "Disable");
 
-            reader.Disconnect(CardDisposition.Unpower);
+            smartCardReader.Disconnect(CardDisposition.Unpower);
         }
 
         public static void SetOperatingMode(string readerName)
         {
             var contactSlot = new Readers.AViatoR.Components.ContactSlotConfiguration();
 
-            IReader reader = Connect(readerName);
+            ISmartCardReader smartCardReader = Connect(readerName);
 
-            if (!reader.IsConnected)
+            if (!smartCardReader.IsConnected)
                 return;
 
             string command;
@@ -139,7 +139,7 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
 
             // Set ISO7816 mode
             command = contactSlot.OperatingMode.SetApdu(OperatingModeFlags.Iso7816);
-            response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
+            response = smartCardReader.ConnectionMode != ReaderSharingMode.Direct ? smartCardReader.Transmit(command) : smartCardReader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
             PrintData("Set Operating Mode", command, response, "ISO 7816 mode");
 
             // Set EMVco mode
@@ -147,16 +147,16 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
             // response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
             // PrintData("Set Operating Mode", command, response, "EMVco mode");
 
-            reader.Disconnect(CardDisposition.Unpower);
+            smartCardReader.Disconnect(CardDisposition.Unpower);
         }
 
         public static void SetVoltageSequence(string readerName)
         {
             var contactSlot = new Readers.AViatoR.Components.ContactSlotConfiguration();
 
-            IReader reader = Connect(readerName);
+            ISmartCardReader smartCardReader = Connect(readerName);
 
-            if (!reader.IsConnected)
+            if (!smartCardReader.IsConnected)
                 return;
 
             string command;
@@ -164,7 +164,7 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
 
             // Device Driver decides
             command = contactSlot.VoltageSequence.SetAutomaticSequenceApdu();
-            response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
+            response = smartCardReader.ConnectionMode != ReaderSharingMode.Direct ? smartCardReader.Transmit(command) : smartCardReader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
             PrintData("Set Voltage Sequence", command, response, "Device driver decides");
 
             // High Mid Low
@@ -177,7 +177,7 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
             // response = reader.ConnectionMode != ReaderSharingMode.Direct ? reader.Transmit(command) : reader.Control(ReaderControlCode.IOCTL_CCID_ESCAPE, command);
             // PrintData("Voltage Sequence", command, response, "Low -> Mid -> High");
 
-            reader.Disconnect(CardDisposition.Unpower);
+            smartCardReader.Disconnect(CardDisposition.Unpower);
         }
 
     }

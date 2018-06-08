@@ -1,5 +1,5 @@
 ﻿/*****************************************************************************************
-    (c) 2017 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
+    (c) 2017-2018 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
 
       Redistribution and use in source and binary forms, with or without modification,
       are permitted provided that the following conditions are met:
@@ -21,6 +21,7 @@
 *****************************************************************************************/
 using System;
 using System.ComponentModel;
+using HidGlobal.OK.Readers.WinSCard;
 
 namespace HidGlobal.OK.Readers.Components
 {
@@ -85,7 +86,7 @@ namespace HidGlobal.OK.Readers.Components
         /// <summary>
         /// The application expects that there is a card in the reader with an ATR that matches one of the target cards. 
         /// If this bit is set, <see cref="ReaderStates.Present"/> is assumed. 
-        /// This bit has no meaning to <see cref="WinSCard.SCardGetStatusChange(IntPtr, int, SCardReaderState, int)"/> beyond <see cref="ReaderStates.Present"/>.
+        /// This bit has no meaning to <see cref="WinSCardWrapper.SCardGetStatusChange(IntPtr, int, SCardReaderState, int)"/> beyond <see cref="ReaderStates.Present"/>.
         /// </summary>
         [Description("ATR matches card.")]
         AtrMatch         = 1 << 6,
@@ -102,7 +103,7 @@ namespace HidGlobal.OK.Readers.Components
         /// If this bit is set, <see cref="ReaderStates.Present"/> is assumed.
         /// </summary>
         [Description("In use.")]
-        Inuse            = 1 << 8,
+        InUse            = 1 << 8,
 
         /// <summary>
         /// The application expects that there is an unresponsive card in the reader.

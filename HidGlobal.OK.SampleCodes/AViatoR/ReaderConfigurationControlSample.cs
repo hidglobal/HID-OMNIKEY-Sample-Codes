@@ -1,5 +1,5 @@
 ﻿/*****************************************************************************************
-    (c) 2017 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
+    (c) 2017-2018 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
 
       Redistribution and use in source and binary forms, with or without modification,
       are permitted provided that the following conditions are met:
@@ -36,20 +36,20 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
 
         public class RestoreFactoryDefaults
         {
-            private void RestoreFactoryDefaultsCommand(IReader reader)
+            private void RestoreFactoryDefaultsCommand(ISmartCardReader smartCardReader)
             {
                 var resotoreFactoryDefaults = new Readers.AViatoR.Components.ResotoreFactoryDefaults();
 
                 ConsoleWriter.Instance.PrintMessage("Restore Factory Defaults");
 
                 string input = resotoreFactoryDefaults.GetApdu;
-                string output = ReaderHelper.SendCommand(reader, input);
+                string output = ReaderHelper.SendCommand(smartCardReader, input);
 
                 PrintCommand(string.Empty, input, output);
             }
             public void Run(string readerName)
             {
-                using (var reader = new Reader(Program.WinscardContext.Handle, readerName))
+                using (var reader = new SmartCardReader(readerName))
                 {
                     try
                     {
@@ -82,20 +82,20 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
         }
         public class RebootDevice
         {
-            private void RebootDeviceCommand(IReader reader)
+            private void RebootDeviceCommand(ISmartCardReader smartCardReader)
             {
                 var rebootDevice = new Readers.AViatoR.Components.RebootDevice();
 
                 ConsoleWriter.Instance.PrintMessage("Reboot Device");
 
                 string input = rebootDevice.GetApdu;
-                string output = ReaderHelper.SendCommand(reader, input);
+                string output = ReaderHelper.SendCommand(smartCardReader, input);
 
                 PrintCommand(string.Empty, input, output);
             }
             public void Run(string readerName)
             {
-                using (var reader = new Reader(Program.WinscardContext.Handle, readerName))
+                using (var reader = new SmartCardReader(readerName))
                 {
                     try
                     {
@@ -128,20 +128,20 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
         }
         public class ApplySettings
         {
-            private void ApplySettingsCommand(IReader reader)
+            private void ApplySettingsCommand(ISmartCardReader smartCardReader)
             {
                 var applySettings = new Readers.AViatoR.Components.ApplySettings();
 
                 ConsoleWriter.Instance.PrintMessage("Apply Settings");
 
                 string input = applySettings.GetApdu;
-                string output = ReaderHelper.SendCommand(reader, input);
+                string output = ReaderHelper.SendCommand(smartCardReader, input);
 
                 PrintCommand(string.Empty, input, output);
             }
             public void Run(string readerName)
             {
-                using (var reader = new Reader(Program.WinscardContext.Handle, readerName))
+                using (var reader = new SmartCardReader(readerName))
                 {
                     try
                     {

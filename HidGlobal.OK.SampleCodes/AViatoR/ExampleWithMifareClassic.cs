@@ -1,5 +1,5 @@
 ﻿/*****************************************************************************************
-    (c) 2017 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
+    (c) 2017-2018 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
 
       Redistribution and use in source and binary forms, with or without modification,
       are permitted provided that the following conditions are met:
@@ -32,17 +32,17 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
     {
         public class LoadKeyExample
         {
-            private void LoadKeyCommand(IReader reader, string description, byte keySlot, LoadKeyCommand.KeyType keyType, LoadKeyCommand.Persistence persistence, LoadKeyCommand.Transmission transmission, LoadKeyCommand.KeyLength keyLength, string key)
+            private void LoadKeyCommand(ISmartCardReader smartCardReader, string description, byte keySlot, LoadKeyCommand.KeyType keyType, LoadKeyCommand.Persistence persistence, LoadKeyCommand.Transmission transmission, LoadKeyCommand.KeyLength keyLength, string key)
             {
                 var loadKeyCommand = new Readers.AViatoR.Components.LoadKeyCommand();
 
                 string input = loadKeyCommand.GetApdu(keySlot, keyType, persistence, transmission, keyLength, key);
-                string output = ReaderHelper.SendCommand(reader, input);
+                string output = ReaderHelper.SendCommand(smartCardReader, input);
                 ConsoleWriter.Instance.PrintCommand(description + key, input, output);
             }
             public void Run(string readerName)
             {
-                var reader = new Reader(Program.WinscardContext.Handle, readerName);
+                var reader = new SmartCardReader(readerName);
                 
                 try
                 {
@@ -54,7 +54,7 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
                     ConsoleWriter.Instance.PrintMessage($"Connected\nConnection Mode: {reader.ConnectionMode}");
                     ConsoleWriter.Instance.PrintSplitter();
 
-                    LoadKeyCommand(reader, "Load Mifare Key: ", 0x02,
+                    LoadKeyCommand(reader, "Load Mifare Key: ", 0x00,
                         Readers.AViatoR.Components.LoadKeyCommand.KeyType.CardKey,
                         Readers.AViatoR.Components.LoadKeyCommand.Persistence.Persistent,
                         Readers.AViatoR.Components.LoadKeyCommand.Transmission.Plain,
@@ -81,7 +81,7 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
         {
             public void Run(string readerName)
             {
-                var reader = new Reader(Program.WinscardContext.Handle, readerName);
+                var reader = new SmartCardReader(readerName);
                 
                 try
                 {
@@ -130,7 +130,7 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
         {
             public void Run(string readerName)
             {
-                var reader = new Reader(Program.WinscardContext.Handle, readerName);
+                var reader = new SmartCardReader(readerName);
                 
                 try
                 {
@@ -189,17 +189,17 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
                        ((byte) ~blockNumber).ToString("X2") + $"{blockNumber:X2}" +
                        ((byte) ~blockNumber).ToString("X2");
             }
-            void SendIncrementCommand(IReader reader, string description, int value, byte blockNumber)
+            void SendIncrementCommand(ISmartCardReader smartCardReader, string description, int value, byte blockNumber)
             {
                 var incrementCommand = new IncrementCommand();
                 string input = incrementCommand.GetApdu(blockNumber, value);
-                string output = ReaderHelper.SendCommand(reader, input);
+                string output = ReaderHelper.SendCommand(smartCardReader, input);
 
                 ConsoleWriter.Instance.PrintCommand(description + blockNumber.ToString("X2"), input, output);
             }
             public void Run(string readerName)
             {
-                var reader = new Reader(Program.WinscardContext.Handle, readerName);
+                var reader = new SmartCardReader(readerName);
                 try
                 {
                     ConsoleWriter.Instance.PrintSplitter();
@@ -255,17 +255,17 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
                        ((byte)~blockNumber).ToString("X2") + $"{blockNumber:X2}" +
                        ((byte)~blockNumber).ToString("X2");
             }
-            void SendDecrementCommand(IReader reader, string description, int value, byte blockNumber)
+            void SendDecrementCommand(ISmartCardReader smartCardReader, string description, int value, byte blockNumber)
             {
                 var decrementCommand = new DecrementCommand();
                 string input = decrementCommand.GetApdu(blockNumber, value);
-                string output = ReaderHelper.SendCommand(reader, input);
+                string output = ReaderHelper.SendCommand(smartCardReader, input);
 
                 ConsoleWriter.Instance.PrintCommand(description + blockNumber.ToString("X2"), input, output);
             }
             public void Run(string readerName)
             {
-                var reader = new Reader(Program.WinscardContext.Handle, readerName);
+                var reader = new SmartCardReader(readerName);
                 try
                 {
                     ConsoleWriter.Instance.PrintSplitter();
@@ -321,17 +321,17 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
                        ((byte)~blockNumber).ToString("X2") + $"{blockNumber:X2}" +
                        ((byte)~blockNumber).ToString("X2");
             }
-            void SendIncrementCommand(IReader reader, string description, int value, byte blockNumber)
+            void SendIncrementCommand(ISmartCardReader smartCardReader, string description, int value, byte blockNumber)
             {
                 var incrementCommand = new IncrementDecrementCommand();
                 string input = incrementCommand.GetApdu(IncrementDecrementCommand.OperationType.Increment, blockNumber, value);
-                string output = ReaderHelper.SendCommand(reader, input);
+                string output = ReaderHelper.SendCommand(smartCardReader, input);
 
                 ConsoleWriter.Instance.PrintCommand(description + blockNumber.ToString("X2"), input, output);
             }
             public void Run(string readerName)
             {
-                var reader = new Reader(Program.WinscardContext.Handle, readerName);
+                var reader = new SmartCardReader(readerName);
                 try
                 {
                     ConsoleWriter.Instance.PrintSplitter();
@@ -387,17 +387,17 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
                        ((byte)~blockNumber).ToString("X2") + $"{blockNumber:X2}" +
                        ((byte)~blockNumber).ToString("X2");
             }
-            void SendDecrementCommand(IReader reader, string description, int value, byte blockNumber)
+            void SendDecrementCommand(ISmartCardReader smartCardReader, string description, int value, byte blockNumber)
             {
                 var decrementCommand = new IncrementDecrementCommand();
                 string input = decrementCommand.GetApdu(IncrementDecrementCommand.OperationType.Decrement, blockNumber, value);
-                string output = ReaderHelper.SendCommand(reader, input);
+                string output = ReaderHelper.SendCommand(smartCardReader, input);
 
                 ConsoleWriter.Instance.PrintCommand(description + blockNumber.ToString("X2"), input, output);
             }
             public void Run(string readerName)
             {
-                var reader = new Reader(Program.WinscardContext.Handle, readerName);
+                var reader = new SmartCardReader(readerName);
                 
                 try
                 {

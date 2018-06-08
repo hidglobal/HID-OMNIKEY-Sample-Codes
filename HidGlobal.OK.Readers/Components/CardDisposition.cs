@@ -1,5 +1,5 @@
 ﻿/*****************************************************************************************
-    (c) 2017 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
+    (c) 2017-2018 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
 
       Redistribution and use in source and binary forms, with or without modification,
       are permitted provided that the following conditions are met:
@@ -19,6 +19,7 @@
            (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
            THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *****************************************************************************************/
+using System;
 using System.ComponentModel;
 
 namespace HidGlobal.OK.Readers.Components
@@ -29,27 +30,49 @@ namespace HidGlobal.OK.Readers.Components
     public enum CardDisposition : int
     {
         /// <summary>
-        /// Do nothing on close.
+        /// Do not do anything special.
         /// </summary>
         [Description("No action.")]
         Leave                   = 0,
 
         /// <summary>
-        /// Reset the card on close.
+        /// Reset the card.
         /// </summary>
         [Description("Reset the card")]
         Reset                   = 1,
 
         /// <summary>
-        /// Power down the card on close.
+        /// Power down the card.
         /// </summary>
         [Description("Unpower the card")]
         Unpower                 = 2,
 
         /// <summary>
-        /// Eject the card on close.
+        /// Eject the card.
         /// </summary>
         [Description("Eject the card")]
         Eject                   = 3
     };
+
+    public enum CardInitialization : int
+    {
+        /// <summary>
+        /// Do not do anything special on reconnect.
+        /// </summary>
+        [Description("No action.")]
+        Leave = 0,
+
+        /// <summary>
+        /// Reset the card (Warm Reset).
+        /// </summary>
+        [Description("Reset the card (Warm Reset)")]
+        WarmReset = 1,
+
+        /// <summary>
+        /// Power down the card and reset it (Cold Reset).
+        /// </summary>
+        [Description("Power down the card and reset it (Cold Reset)")]
+        ColdReset = 2,
+    };
+
 }

@@ -1,5 +1,5 @@
 ﻿/*****************************************************************************************
-    (c) 2017 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
+    (c) 2017-2018 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
 
       Redistribution and use in source and binary forms, with or without modification,
       are permitted provided that the following conditions are met:
@@ -29,68 +29,73 @@ namespace HidGlobal.OK.Readers.SecureSession
 {
     public class SecureChannel : ISecureChannel
     {
-        protected static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
-        enum SessionStatus { NotEstablished, GetChallengePhase, MutualAuthenticationPhase, Established };
+        enum SessionStatus
+        {
+            NotEstablished,
+            GetChallengePhase,
+            MutualAuthenticationPhase,
+            Established
+        };
 
         /// <summary>
         /// Length of encryption key in bytes.
         /// </summary>
-        const int _keyLength = 0x10;
+        private const int KeyLength = 0x10;
         /// <summary>
         /// Length of mac key in bytes.
         /// </summary>
-        const int _macLength = 0x10;
+        private const int MacLength = 0x10;
         /// <summary>
         /// Length of nonce in bytes.
         /// </summary>
-        const int _nonceLength = 0x10;
+        private const int NonceLength = 0x10;
         /// <summary>
         /// Current status of secure channel.
         /// </summary>
-        SessionStatus _sessionStatus;
-        public bool IsSessionActive { get { return _sessionStatus == SessionStatus.Established;  } }
+        private SessionStatus _sessionStatus;
+        public bool IsSessionActive => _sessionStatus == SessionStatus.Established;
+
         /// <summary>
         /// Reader 16-bytes response to Get Challange request.
         /// </summary>
-        string _readerNonce;
+        private string _readerNonce;
         /// <summary>
         /// 16-bytes key randomized by the reader.
         /// </summary>
-        string _readerKey;
+        private string _readerKey;
         /// <summary>
         /// 16-bytes key randomized by the client.
         /// </summary>
-        string _hostKey;
+        private string _hostKey;
         /// <summary>
         /// 16-bytes random number from the client.
         /// </summary>
-        string _hostNonce;
+        private string _hostNonce;
         /// <summary>
         /// SSC is a 16 bytes counter which must be incremented after every packet (request and response).
         /// </summary>
-        Counter _counter;
+        private Counter _counter;
         /// <summary>
         /// Active Session Key.
         /// </summary>
-        string _sessionEncryptionKey;
+        private string _sessionEncryptionKey;
         /// <summary>
         /// Active Session Mac.
         /// </summary>
-        string _sessionMacKey;
+        private string _sessionMacKey;
         /// <summary>
         /// Key slot used to establish secure session.
         /// </summary>
-        byte _keySlot;
+        private byte _keySlot;
         /// <summary>
         /// Reader object
         /// </summary>
-        IReader _reader;
+        private ISmartCardReader _smartCardReader;
 
-        public SecureChannel(IReader reader)
+        public SecureChannel(ISmartCardReader smartCardReader)
         {
             _sessionStatus          = SessionStatus.NotEstablished;
-            _reader                 = reader;
+            _smartCardReader                 = smartCardReader;
         }
         /// <summary>
         /// Retuns true if bitwise AND of two arrays is not equal to 0.
@@ -98,7 +103,7 @@ namespace HidGlobal.OK.Readers.SecureSession
         /// <param name="arrayA"> Array of bytes.</param>
         /// <param name="arrayB"> Array of bytes.</param>
         /// <returns></returns>
-        bool BitWiseAndForArrayIsNotZero(byte[] arrayA, byte[] arrayB)
+        private static bool BitWiseAndForArrayIsNotZero(byte[] arrayA, byte[] arrayB)
         {
             var arrayLength = arrayA.Length >= arrayB.Length ? arrayA.Length : arrayB.Length;
             // Pads the arrays with 0x00 on the left side to appropriate length
@@ -125,7 +130,7 @@ namespace HidGlobal.OK.Readers.SecureSession
         /// <param name="arrayA"> Array of bytes.</param>
         /// <param name="arrayB"> Array of bytes.</param>
         /// <returns> Array of bytes with result of AND operation on appropriate bytes of both arrays.</returns>
-        byte[] BitWiseAndForArray(byte[] arrayA, byte[] arrayB)
+        private static byte[] BitWiseAndForArray(byte[] arrayA, byte[] arrayB)
         {
             var arrayLength = arrayA.Length >= arrayB.Length ? arrayA.Length : arrayB.Length;
             var result = new byte[arrayLength];
@@ -150,7 +155,7 @@ namespace HidGlobal.OK.Readers.SecureSession
         /// </summary>
         /// <param name="parameter"> Byte array to be rolled. </param>
         /// <returns></returns>
-        byte[] Rol(byte[] parameter)
+        private static byte[] Rol(byte[] parameter)
         {
             var result = new byte[parameter.Length];
             byte carry = 0;
@@ -162,7 +167,8 @@ namespace HidGlobal.OK.Readers.SecureSession
             }
             return result;
         }
-        byte[] Double(byte[] parameter)
+
+        private static byte[] Double(byte[] parameter)
         {
             byte[] result = null;
             byte[] temp = null;
@@ -176,7 +182,7 @@ namespace HidGlobal.OK.Readers.SecureSession
                 result[result.Length - 1] = (byte)(result[result.Length - 1] ^ 0x87);
             return result;
         }
-        byte[] XorEnd(byte[] m, byte[] t)
+        private static byte[] XorEnd(byte[] m, byte[] t)
         {
             try
             {
@@ -208,7 +214,7 @@ namespace HidGlobal.OK.Readers.SecureSession
                 throw new Exception("XorEnd exception", error);
             }
         }
-        byte[] XorArray(byte[] first, byte[] second)
+        private static byte[] XorArray(byte[] first, byte[] second)
         {
             if (first.Length == second.Length)
             {
@@ -220,7 +226,7 @@ namespace HidGlobal.OK.Readers.SecureSession
             else
                 throw new Exception("XorArray: Array sizes are not equal.");
         }
-        byte[] AesSivCtr(byte[] key, byte[] mac, byte[] data)
+        private static byte[] AesSivCtr(byte[] key, byte[] mac, byte[] data)
         {
             var mask = new byte[] { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x7F, 0xFF, 0xFF, 0xFF, 0x7F, 0xFF, 0xFF, 0xFF };
             var iv = BitWiseAndForArray(mac, mask);
@@ -232,7 +238,7 @@ namespace HidGlobal.OK.Readers.SecureSession
 
             return result;
         }
-        byte[] AesSivMac(byte[] macKey, byte[] header, byte[] data)
+        private static byte[] AesSivMac(byte[] macKey, byte[] header, byte[] data)
         {
             var cmzerod = Double(CMac.GetHashTag(macKey, new byte[16]));
             var h1Mac = CMac.GetHashTag(macKey, header);
@@ -241,42 +247,33 @@ namespace HidGlobal.OK.Readers.SecureSession
             var iv = CMac.GetHashTag(macKey, t);
             return iv;
         }
-        byte[] AesSp800108(byte[] data, byte[] macKey)
+        private static byte[] AesSp800108(byte[] data, byte[] macKey)
         {
             byte[] key1 = CMac.GetHashTag(macKey, data.Concat<byte>(new byte[] { 0x01, 0x01, 0x00 }).ToArray());
             byte[] key2 = CMac.GetHashTag(macKey, data.Concat<byte>(new byte[] { 0x02, 0x01, 0x00 }).ToArray());
             return key1.Concat(key2).ToArray();
         }
-        bool Connect()
+        private bool Connect()
         {
-            if (_reader.IsConnected != false)
-                _reader.Disconnect(CardDisposition.Unpower);
+            if (_smartCardReader.IsConnected)
+                _smartCardReader.Disconnect();
 
-            _reader.Connect(Components.ReaderSharingMode.Exclusive, Components.Protocol.Any);
+            _smartCardReader.Connect(ReaderSharingMode.Exclusive, Protocol.Any);
 
-            if (_reader.IsConnected != true)
-                return false;
-            else
-                return true;
+            return _smartCardReader.IsConnected;
         }
         
         public void Establish(string key, byte keySlot)
         {
             _keySlot = keySlot;
-            if (key.Length != (4 * _macLength))
-            {
-                log.Error($"{nameof(key)} length invalid, expected 32 bytes key");
-                return;
-            }
+            if (key.Length != (4 * MacLength))
+                throw new ArgumentException($"{nameof(key)} length invalid, expected 32 bytes key");
 
-            _sessionEncryptionKey = key.Substring(0, 2 * _keyLength);
-            _sessionMacKey = key.Substring(2 * _keyLength);
+            _sessionEncryptionKey = key.Substring(0, 2 * KeyLength);
+            _sessionMacKey = key.Substring(2 * KeyLength);
 
             if (!Connect())
-            {
-                log.Error($"Unable to connect to reader: {_reader.PcscReaderName}");
-                return;
-            }
+                throw new Exception($"Unable to connect to reader: {_smartCardReader.PcscReaderName}");
 
             GetChallange();
             var response = HostAuthentication();
@@ -288,25 +285,24 @@ namespace HidGlobal.OK.Readers.SecureSession
             Establish(BinaryHelper.ConvertBytesToOctetString(key), keySlot);
         }
 
-        void GetChallange()
+        private void GetChallange()
         {
             _sessionStatus = SessionStatus.GetChallengePhase;
 
             string getChallangeApdu = "FF7200" + _keySlot.ToString("X2") + "00";
 
-            var response = _reader.Transmit(getChallangeApdu);
+            var response = _smartCardReader.Transmit(getChallangeApdu);
 
             if (response.Substring(response.Length - 4) != "9000")
             {
-                log.Error($"Establish secure session failed at {_sessionStatus}\nSend: {getChallangeApdu}\nRecived apdu: {response}");
                 _sessionStatus = SessionStatus.NotEstablished;
-                return;
+                throw new Exception($"Establish secure session failed at {_sessionStatus}\nSend: {getChallangeApdu}\nRecived apdu: {response}");
             }
-            _readerNonce = response.Substring(0, _nonceLength * 2);
+            _readerNonce = response.Substring(0, NonceLength * 2);
             
         }
 
-        string HostAuthentication()
+        private string HostAuthentication()
         {
             if (_sessionStatus != SessionStatus.GetChallengePhase)
             {
@@ -314,10 +310,10 @@ namespace HidGlobal.OK.Readers.SecureSession
                 return null;
             }
 
-            using (var randomGenerator = RNGCryptoServiceProvider.Create())
+            using (var randomGenerator = RandomNumberGenerator.Create())
             {
-                var hostKey = new byte[_keyLength];
-                var hostNonce = new byte[_nonceLength];
+                var hostKey = new byte[KeyLength];
+                var hostNonce = new byte[NonceLength];
 
                 randomGenerator.GetBytes(hostKey);
                 randomGenerator.GetBytes(hostNonce);
@@ -332,19 +328,18 @@ namespace HidGlobal.OK.Readers.SecureSession
             var enc = AesSivCtr(BinaryHelper.ConvertOctetStringToBytes(_sessionEncryptionKey), mac, plain);
 
             string mutualAuthenticationApdu = "FF72010040" + BinaryHelper.ConvertBytesToOctetString(enc.Concat(mac).ToArray());
-            var response = _reader.Transmit(mutualAuthenticationApdu);
+            var response = _smartCardReader.Transmit(mutualAuthenticationApdu);
 
             if (response.Substring(response.Length - 4) != "9000")
             {
-                log.Error($"Establish secure session failed at HostAuthenticationPhase \nSend: {mutualAuthenticationApdu}\nRecived apdu: {response}");
                 _sessionStatus = SessionStatus.NotEstablished;
-                return null;
+                throw new Exception($"Establish secure session failed at HostAuthenticationPhase \nSend: {mutualAuthenticationApdu}\nRecived apdu: {response}");
             }
             _sessionStatus = SessionStatus.MutualAuthenticationPhase;
             return response;
         }
 
-        void ReaderAuthentication(string hostAuthResponse)
+        private void ReaderAuthentication(string hostAuthResponse)
         {
             if (_sessionStatus != SessionStatus.MutualAuthenticationPhase)
             {
@@ -353,54 +348,52 @@ namespace HidGlobal.OK.Readers.SecureSession
             }
             
             var data = BinaryHelper.ConvertOctetStringToBytes(hostAuthResponse.Substring(0, hostAuthResponse.Length - 4));
-            var mac2 = data.Skip(_nonceLength + _nonceLength + _keyLength).Take(_macLength).ToArray();
+            var mac2 = data.Skip(NonceLength + NonceLength + KeyLength).Take(MacLength).ToArray();
 
-            var plain2 = AesSivCtr(BinaryHelper.ConvertOctetStringToBytes(_sessionEncryptionKey), mac2, data.Take(_nonceLength + _nonceLength + _keyLength).ToArray());
+            var plain2 = AesSivCtr(BinaryHelper.ConvertOctetStringToBytes(_sessionEncryptionKey), mac2, data.Take(NonceLength + NonceLength + KeyLength).ToArray());
             var mac3 = AesSivMac(BinaryHelper.ConvertOctetStringToBytes(_sessionMacKey), new byte[] { _keySlot }, plain2);
 
-            if (!Enumerable.SequenceEqual(mac2, mac3))
+            if (!mac2.SequenceEqual(mac3))
             {
-                log.Error("Mac mismatch. Session Terminated.");
                 _sessionStatus = SessionStatus.NotEstablished;
-                return;
+                throw new Exception("Mac mismatch. Session Terminated.");
             }
-            if (!Enumerable.SequenceEqual(plain2.Take(_nonceLength).ToArray(), BinaryHelper.ConvertOctetStringToBytes(_readerNonce)))
+            if (!plain2.Take(NonceLength).ToArray().SequenceEqual(BinaryHelper.ConvertOctetStringToBytes(_readerNonce)))
             {
-                log.Error("Reader nonce mismatch. Session Terminated.");
                 _sessionStatus = SessionStatus.NotEstablished;
-                return;
+                throw new Exception("Reader nonce mismatch. Session Terminated.");
             }
-            if (!Enumerable.SequenceEqual(plain2.Skip(_nonceLength).Take(_nonceLength).ToArray(), BinaryHelper.ConvertOctetStringToBytes(_hostNonce)))
+            if (!plain2.Skip(NonceLength).Take(NonceLength).ToArray().SequenceEqual(BinaryHelper.ConvertOctetStringToBytes(_hostNonce)))
             {
-                log.Error("Host nonce mismatch. Session Terminated.");
                 _sessionStatus = SessionStatus.NotEstablished;
-                return;
+                throw new Exception("Host nonce mismatch. Session Terminated.");
             }
 
-            _readerKey = BinaryHelper.ConvertBytesToOctetString(plain2.Skip(_nonceLength + _nonceLength)
-                .Take(_keyLength)
+            _readerKey = BinaryHelper.ConvertBytesToOctetString(plain2.Skip(NonceLength + NonceLength)
+                .Take(KeyLength)
                 .ToArray());
 
             var sessionkeys = AesSp800108(BinaryHelper.ConvertOctetStringToBytes(_hostKey + _readerKey),
                 BinaryHelper.ConvertOctetStringToBytes(_sessionMacKey));
 
-            _sessionEncryptionKey = BinaryHelper.ConvertBytesToOctetString(sessionkeys.Take(_keyLength).ToArray());
-            _sessionMacKey = BinaryHelper.ConvertBytesToOctetString(sessionkeys.Skip(_keyLength).Take(_keyLength).ToArray());
+            _sessionEncryptionKey = BinaryHelper.ConvertBytesToOctetString(sessionkeys.Take(KeyLength).ToArray());
+            _sessionMacKey = BinaryHelper.ConvertBytesToOctetString(sessionkeys.Skip(KeyLength).Take(KeyLength).ToArray());
 
             _counter = new Counter(_hostNonce, _readerNonce);
 
             _sessionStatus = SessionStatus.Established;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Terminates established secure channel
         /// </summary>
         public void Terminate()
         {
             if (_sessionStatus == SessionStatus.Established)
-                _reader.Transmit("FF72030000");
+                _smartCardReader.Transmit("FF72030000");
 
-            if (_reader.IsConnected)
-                _reader.Disconnect(CardDisposition.Unpower);
+            if (_smartCardReader.IsConnected)
+                _smartCardReader.Disconnect();
 
             _sessionStatus          = SessionStatus.NotEstablished;
             _sessionEncryptionKey   = null;
@@ -411,6 +404,7 @@ namespace HidGlobal.OK.Readers.SecureSession
             _readerNonce            = null;
             _counter                = null;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Encrypts and sends given apdu command, returns decrypted response.
         /// </summary>
@@ -420,46 +414,44 @@ namespace HidGlobal.OK.Readers.SecureSession
         {
             if (_sessionStatus != SessionStatus.Established)
             {
-                log.Error("Attempt to Send Command via secure session, while session is not established");
                 Terminate();
-                return null;
+                throw new Exception("Attempt to Send Command via secure session, while session is not established");
             }
             // Encrypt data
             _counter.Increment();
 
-            byte[] mac = AesSivMac(BinaryHelper.ConvertOctetStringToBytes(_sessionMacKey), BinaryHelper.ConvertOctetStringToBytes(_counter.Value), BinaryHelper.ConvertOctetStringToBytes(apdu));
+            byte[] mac = AesSivMac(BinaryHelper.ConvertOctetStringToBytes(_sessionMacKey), _counter.Value, BinaryHelper.ConvertOctetStringToBytes(apdu));
             byte[] enc = AesSivCtr(BinaryHelper.ConvertOctetStringToBytes(_sessionEncryptionKey), mac, BinaryHelper.ConvertOctetStringToBytes(apdu));
             byte[] data = enc.Concat(mac).ToArray();
 
-            var response = _reader.Transmit("FF720200" + data.Length.ToString("X2") + BinaryHelper.ConvertBytesToOctetString(data));
+            var response = _smartCardReader.Transmit("FF720200" + data.Length.ToString("X2") + BinaryHelper.ConvertBytesToOctetString(data));
             
             // Decrypt response
             _counter.Increment();
 
             if (response.Substring(response.Length - 4) != "9000")
             {
-                log.Error($"Error {response.Substring(response.Length - 4)}\nSession Terminated.");
                 _sessionStatus = SessionStatus.NotEstablished;
                 Terminate();
-                return response;
+                throw new Exception($"Error {response.Substring(response.Length - 4)}\nSession Terminated.");
             }
 
             byte[] cryptogram = BinaryHelper.ConvertOctetStringToBytes(response.Substring(0, response.Length - 4));
 
-            byte[] dataEnc = cryptogram.Take(cryptogram.Length - _macLength).ToArray();
-            byte[] dataMac = cryptogram.Skip(cryptogram.Length - _macLength).Take(_macLength).ToArray();
+            byte[] dataEnc = cryptogram.Take(cryptogram.Length - MacLength).ToArray();
+            byte[] dataMac = cryptogram.Skip(cryptogram.Length - MacLength).Take(MacLength).ToArray();
 
             byte[] plain = AesSivCtr(BinaryHelper.ConvertOctetStringToBytes(_sessionEncryptionKey), dataMac, dataEnc);
-            byte[] dataMac2 = AesSivMac(BinaryHelper.ConvertOctetStringToBytes(_sessionMacKey), BinaryHelper.ConvertOctetStringToBytes(_counter.Value), plain);
-            if (!Enumerable.SequenceEqual(dataMac, dataMac2))
+            byte[] dataMac2 = AesSivMac(BinaryHelper.ConvertOctetStringToBytes(_sessionMacKey), _counter.Value, plain);
+            if (!dataMac.SequenceEqual(dataMac2))
             {
-                log.Error("Mac mismatch in decrypted response.\nSession Terminated.");
                 _sessionStatus = SessionStatus.NotEstablished;
                 Terminate();
-                return null;
+                throw new Exception("Mac mismatch in decrypted response.\nSession Terminated.");
             }
             return BinaryHelper.ConvertBytesToOctetString(plain);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Encrypts and sends given apdu command, returns decrypted response.
         /// </summary>
@@ -482,10 +474,10 @@ namespace HidGlobal.OK.Readers.SecureSession
                     if (IsSessionActive)
                         Terminate();
 
-                    if (_reader.IsConnected)
-                        _reader.Disconnect(CardDisposition.Reset);
+                    if (_smartCardReader.IsConnected)
+                        _smartCardReader.Disconnect(CardDisposition.Reset);
 
-                    _reader                 = null;
+                    _smartCardReader                 = null;
                 }
 
 

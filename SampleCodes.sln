@@ -6,26 +6,66 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HidGlobal.OK.SampleCodes", "HidGlobal.OK.SampleCodes\HidGlobal.OK.SampleCodes.csproj", "{12209FE6-96B1-4700-AC36-DE3AFFAA5F1C}"
 	ProjectSection(ProjectDependencies) = postProject
 		{12773016-4E38-4E9C-B0A2-A4FF295B3993} = {12773016-4E38-4E9C-B0A2-A4FF295B3993}
+		{57935175-7CD4-40FB-AE61-348837D7859C} = {57935175-7CD4-40FB-AE61-348837D7859C}
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HidGlobal.OK.Readers", "HidGlobal.OK.Readers\HidGlobal.OK.Readers.csproj", "{12773016-4E38-4E9C-B0A2-A4FF295B3993}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Utilities", "Utilities", "{EB3259D2-9F1D-465D-A7FB-BBAF1707694C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KbwToCcidSwitchApi", "Utilities\KbwToCcidSwitchApi\KbwToCcidSwitchApi.csproj", "{57935175-7CD4-40FB-AE61-348837D7859C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
 		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{12209FE6-96B1-4700-AC36-DE3AFFAA5F1C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{12209FE6-96B1-4700-AC36-DE3AFFAA5F1C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12209FE6-96B1-4700-AC36-DE3AFFAA5F1C}.Debug|x64.ActiveCfg = Debug|x64
+		{12209FE6-96B1-4700-AC36-DE3AFFAA5F1C}.Debug|x64.Build.0 = Debug|x64
+		{12209FE6-96B1-4700-AC36-DE3AFFAA5F1C}.Debug|x86.ActiveCfg = Debug|x86
+		{12209FE6-96B1-4700-AC36-DE3AFFAA5F1C}.Debug|x86.Build.0 = Debug|x86
 		{12209FE6-96B1-4700-AC36-DE3AFFAA5F1C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{12209FE6-96B1-4700-AC36-DE3AFFAA5F1C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12209FE6-96B1-4700-AC36-DE3AFFAA5F1C}.Release|x64.ActiveCfg = Release|x64
+		{12209FE6-96B1-4700-AC36-DE3AFFAA5F1C}.Release|x64.Build.0 = Release|x64
+		{12209FE6-96B1-4700-AC36-DE3AFFAA5F1C}.Release|x86.ActiveCfg = Release|x86
+		{12209FE6-96B1-4700-AC36-DE3AFFAA5F1C}.Release|x86.Build.0 = Release|x86
 		{12773016-4E38-4E9C-B0A2-A4FF295B3993}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{12773016-4E38-4E9C-B0A2-A4FF295B3993}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12773016-4E38-4E9C-B0A2-A4FF295B3993}.Debug|x64.ActiveCfg = Debug|x64
+		{12773016-4E38-4E9C-B0A2-A4FF295B3993}.Debug|x64.Build.0 = Debug|x64
+		{12773016-4E38-4E9C-B0A2-A4FF295B3993}.Debug|x86.ActiveCfg = Debug|x86
+		{12773016-4E38-4E9C-B0A2-A4FF295B3993}.Debug|x86.Build.0 = Debug|x86
 		{12773016-4E38-4E9C-B0A2-A4FF295B3993}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{12773016-4E38-4E9C-B0A2-A4FF295B3993}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12773016-4E38-4E9C-B0A2-A4FF295B3993}.Release|x64.ActiveCfg = Release|x64
+		{12773016-4E38-4E9C-B0A2-A4FF295B3993}.Release|x64.Build.0 = Release|x64
+		{12773016-4E38-4E9C-B0A2-A4FF295B3993}.Release|x86.ActiveCfg = Release|x86
+		{12773016-4E38-4E9C-B0A2-A4FF295B3993}.Release|x86.Build.0 = Release|x86
+		{57935175-7CD4-40FB-AE61-348837D7859C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{57935175-7CD4-40FB-AE61-348837D7859C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{57935175-7CD4-40FB-AE61-348837D7859C}.Debug|x64.ActiveCfg = Debug|x64
+		{57935175-7CD4-40FB-AE61-348837D7859C}.Debug|x64.Build.0 = Debug|x64
+		{57935175-7CD4-40FB-AE61-348837D7859C}.Debug|x86.ActiveCfg = Debug|x86
+		{57935175-7CD4-40FB-AE61-348837D7859C}.Debug|x86.Build.0 = Debug|x86
+		{57935175-7CD4-40FB-AE61-348837D7859C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{57935175-7CD4-40FB-AE61-348837D7859C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{57935175-7CD4-40FB-AE61-348837D7859C}.Release|x64.ActiveCfg = Release|x64
+		{57935175-7CD4-40FB-AE61-348837D7859C}.Release|x64.Build.0 = Release|x64
+		{57935175-7CD4-40FB-AE61-348837D7859C}.Release|x86.ActiveCfg = Release|x86
+		{57935175-7CD4-40FB-AE61-348837D7859C}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{57935175-7CD4-40FB-AE61-348837D7859C} = {EB3259D2-9F1D-465D-A7FB-BBAF1707694C}
 	EndGlobalSection
 EndGlobal

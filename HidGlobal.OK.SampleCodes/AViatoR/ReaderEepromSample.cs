@@ -1,5 +1,5 @@
 ﻿/*****************************************************************************************
-    (c) 2017 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
+    (c) 2017-2018 HID Global Corporation/ASSA ABLOY AB.  All rights reserved.
 
       Redistribution and use in source and binary forms, with or without modification,
       are permitted provided that the following conditions are met:
@@ -35,20 +35,20 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
         }
         public class WriteEeprom
         {
-            private void WriteEepromCommand(IReader reader, string comment, ushort offset, string dataToWrite)
+            private void WriteEepromCommand(ISmartCardReader smartCardReader, string comment, ushort offset, string dataToWrite)
             {
                 var eepromCommands = new Readers.AViatoR.Components.ReaderEeprom();
 
                 string input = eepromCommands.WriteCommand(offset, dataToWrite);
-                string output = ReaderHelper.SendCommand(reader, input);
+                string output = ReaderHelper.SendCommand(smartCardReader, input);
 
                 PrintCommand(comment, input, output);
             }
-            void ExecuteExample(IReader reader)
+            void ExecuteExample(ISmartCardReader smartCardReader)
             {
-                WriteEepromCommand(reader, "Write 1 byte of FF with offset address 0x0001", 0x0001, "FF");
-                WriteEepromCommand(reader, "Write 16 bytes of FF with offset address 0x0001", 0x0001, "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
-                WriteEepromCommand(reader, "Write 128 bytes of FF with offset address 0x0001", 0x0001,
+                WriteEepromCommand(smartCardReader, "Write 1 byte of FF with offset address 0x0001", 0x0001, "FF");
+                WriteEepromCommand(smartCardReader, "Write 16 bytes of FF with offset address 0x0001", 0x0001, "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+                WriteEepromCommand(smartCardReader, "Write 128 bytes of FF with offset address 0x0001", 0x0001,
                     "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF" + "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF" +
                     "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF" + "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF" +
                     "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF" + "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF" +
@@ -56,7 +56,7 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
             }
             public void Run(string readerName)
             {
-                using (var reader = new Reader(Program.WinscardContext.Handle, readerName))
+                using (var reader = new SmartCardReader(readerName))
                 {
                     try
                     {
@@ -90,24 +90,24 @@ namespace HidGlobal.OK.SampleCodes.AViatoR
 
         public class ReadEeprom
         {
-            private void ReadEepromCommand(IReader reader, string comment, ushort offset, byte dataLength)
+            private void ReadEepromCommand(ISmartCardReader smartCardReader, string comment, ushort offset, byte dataLength)
             {
                 var eepromCommands = new Readers.AViatoR.Components.ReaderEeprom();
 
                 string input = eepromCommands.ReadCommand(offset, dataLength);
-                string output = ReaderHelper.SendCommand(reader, input);
+                string output = ReaderHelper.SendCommand(smartCardReader, input);
 
                 PrintCommand(comment, input, output);
             }
-            private void ExecuteExample(IReader reader)
+            private void ExecuteExample(ISmartCardReader smartCardReader)
             {
-                ReadEepromCommand(reader, "Read 1 byte with offset address 0x0000", 0x0000, 0x01);
-                ReadEepromCommand(reader, "Read 16 bytes with offset address 0x00F0", 0x00F0, 0x10);
-                ReadEepromCommand(reader, "Read 128 bytes with offset address 0x0100", 0x0100, 0x80);
+                ReadEepromCommand(smartCardReader, "Read 1 byte with offset address 0x0000", 0x0000, 0x01);
+                ReadEepromCommand(smartCardReader, "Read 16 bytes with offset address 0x00F0", 0x00F0, 0x10);
+                ReadEepromCommand(smartCardReader, "Read 128 bytes with offset address 0x0100", 0x0100, 0x80);
             }
             public void Run(string readerName)
             {
-                using (var reader = new Reader(Program.WinscardContext.Handle, readerName))
+                using (var reader = new SmartCardReader(readerName))
                 {
                     try
                     {
