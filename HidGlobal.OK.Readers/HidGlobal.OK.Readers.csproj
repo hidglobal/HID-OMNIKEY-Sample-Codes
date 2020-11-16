@@ -1,132 +1,38 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{12773016-4E38-4E9C-B0A2-A4FF295B3993}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>HidGlobal.OK.Readers</RootNamespace>
-    <AssemblyName>HidGlobal.OK.Readers</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyTitle>HidGlobal.OK.Readers.Components</AssemblyTitle>
+    <Product>HidGlobal.OK.Readers.Components</Product>
+    <Copyright>Copyright © 2017 - 2018</Copyright>
+    <AssemblyVersion>0.0.0</AssemblyVersion>
+    <FileVersion>0.0.0</FileVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
-    <PlatformTarget>x86</PlatformTarget>
-    <OutputPath>bin\x86\Debug\</OutputPath>
+    <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
-    <PlatformTarget>x86</PlatformTarget>
-    <OutputPath>bin\x86\Release\</OutputPath>
+    <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <PlatformTarget>x64</PlatformTarget>
-    <OutputPath>bin\x64\Debug\</OutputPath>
+    <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <PlatformTarget>x64</PlatformTarget>
-    <OutputPath>bin\x64\Release\</OutputPath>
+    <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.ComponentModel.DataAnnotations" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="AViatoR\Components\ConfigurationCardSupport\ConfigurationFile.cs" />
-    <Compile Include="AViatoR\Components\ContactSlotConfiguration.cs" />
-    <Compile Include="AViatoR\Components\ContactlessCardCommunication.cs" />
-    <Compile Include="AViatoR\Components\ContactlessSlotConfiguration.cs" />
-    <Compile Include="AViatoR\Components\KeyboardWedgeConfigurationEnums.cs" />
-    <Compile Include="AViatoR\Components\KeyboardWedgeConfiguration.cs" />
-    <Compile Include="AViatoR\Components\ConfigurationCardSupport\ConfigurationCard.cs" />
-    <Compile Include="AViatoR\Components\ReaderCapabilities.cs" />
-    <Compile Include="AViatoR\Components\ContactCardComunication.cs" />
-    <Compile Include="AViatoR\Components\SEProcessorCommands.cs" />
-    <Compile Include="AViatoR\OK5022.cs" />
-    <Compile Include="AViatoR\Components\ReaderConfigurationControl.cs" />
-    <Compile Include="AViatoR\Components\ReaderEeprom.cs" />
-    <Compile Include="AViatoR\OK5023.cs" />
-    <Compile Include="AViatoR\OK5422.cs" />
-    <Compile Include="Apdu.cs" />
-    <Compile Include="Components\BaudRates.cs" />
-    <Compile Include="Components\BookAndPageForiClass.cs" />
-    <Compile Include="Components\EnabledCLFeatures.cs" />
-    <Compile Include="Components\ExchangeLevelFlags.cs" />
-    <Compile Include="Components\HostInterfaceFlags.cs" />
-    <Compile Include="Components\HumanInterfaceFlags.cs" />
-    <Compile Include="Components\ConnectionStatus.cs" />
-    <Compile Include="Components\OperatingModeFlags.cs" />
-    <Compile Include="Components\PollingFrequency.cs" />
-    <Compile Include="Components\PollingSearchOrder.cs" />
-    <Compile Include="Components\VoltageSequenceFlags.cs" />
-    <Compile Include="ISmartCardReader.cs" />
-    <Compile Include="AViatoR\OK5122.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ContextHandler.cs" />
-    <Compile Include="IContextHandler.cs" />
-    <Compile Include="Components\Attribiutes.cs" />
-    <Compile Include="Components\CardState.cs" />
-    <Compile Include="Components\CardDisposition.cs" />
-    <Compile Include="Components\Protocol.cs" />
-    <Compile Include="Components\ReaderControlCode.cs" />
-    <Compile Include="Components\ReaderStates.cs" />
-    <Compile Include="Components\Scope.cs" />
-    <Compile Include="Components\ReaderSharingMode.cs" />
-    <Compile Include="Components\IORequest.cs" />
-    <Compile Include="Components\ReaderState.cs" />
-    <Compile Include="Utilities\ExceptionHelper.cs" />
-    <Compile Include="Utilities\LinqExtension.cs" />
-    <Compile Include="WinSCard\WinSCardWrapper.cs" />
-    <Compile Include="SmartCardReader.cs" />
-    <Compile Include="SecureSession\AesCounterMode.cs" />
-    <Compile Include="SecureSession\CMac.cs" />
-    <Compile Include="SecureSession\ISecureChannel.cs" />
-    <Compile Include="SecureSession\SamSecureSession\SamSecureSession.cs" />
-    <Compile Include="SecureSession\SessionAccessKeyType.cs" />
-    <Compile Include="SecureSession\Counter.cs" />
-    <Compile Include="SecureSession\CounterModeCryptoTransform.cs" />
-    <Compile Include="SecureSession\SecureChannel.cs" />
-    <Compile Include="Utilities\BinaryHelper.cs" />
-    <Compile Include="Utilities\CyclicRedundancyCheck.cs" />
-    <Compile Include="Utilities\EnumExtension.cs" />
-    <Compile Include="Utilities\PrePostStrokesBuilder.cs" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>if not exist $(ProjectDir)out mkdir $(ProjectDir)out
-copy $(TargetPath) $(ProjectDir)out\</PostBuildEvent>
-  </PropertyGroup>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="if not exist $(ProjectDir)out mkdir $(ProjectDir)out" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ProjectDir)out\" />
   </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+  <ItemGroup>
+    <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
+  </ItemGroup>
 </Project>
